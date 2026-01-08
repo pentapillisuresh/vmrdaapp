@@ -46,7 +46,7 @@ export default function LoginSelectionScreen() {
               width: 80,
               height: 80,
               borderRadius: 20,
-              backgroundColor: theme.colors.primary,
+
               justifyContent: "center",
               alignItems: "center",
               marginBottom: 16,

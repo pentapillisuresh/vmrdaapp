@@ -1,9 +1,11 @@
 import { Tabs } from "expo-router";
 import { Home, LayoutList, PlusCircle, Users, User } from "lucide-react-native";
 import { useTheme } from "../../utils/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -13,10 +15,11 @@ export default function TabLayout() {
           backgroundColor: theme.colors.tabBarBackground,
           borderTopWidth: 1,
           borderTopColor: theme.colors.tabBarBorder,
-          paddingBottom: 24,
-          paddingTop: 12,
-          height: 84,
-          shadowColor: "transparent",
+
+          // ✅ FIX: Safe padding for system navigation
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 12,
+          paddingTop: 8,
+          height: 60 + insets.bottom,
           elevation: 0,
         },
         tabBarActiveTintColor: theme.colors.tabBarActive,
@@ -24,22 +27,20 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontFamily: "Poppins_500Medium",
-          marginTop: 4,
+          marginTop: 2,
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          marginTop: 2,
         },
         tabBarItemStyle: {
           paddingVertical: 4,
         },
         tabBarHideOnKeyboard: true,
-        tabBarShowLabel: true,
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
           tabBarLabel: "Home",
           tabBarIcon: ({ color, focused }) => (
             <Home
@@ -51,45 +52,45 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="my-listings"
         options={{
-          title: "My Listings",
           tabBarLabel: "My Listings",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color }) => (
             <LayoutList color={color} size={24} strokeWidth={2} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="post-property"
         options={{
-          title: "Post Property",
           tabBarLabel: "Post",
           tabBarIcon: ({ color, focused }) => (
             <PlusCircle
               color={color}
-              size={24}
+              size={26}
               fill={focused ? color : "transparent"}
               strokeWidth={2}
             />
           ),
         }}
       />
+
       <Tabs.Screen
         name="leads"
         options={{
-          title: "Leads",
           tabBarLabel: "Leads",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color }) => (
             <Users color={color} size={24} strokeWidth={2} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="account"
         options={{
-          title: "Account",
           tabBarLabel: "Account",
           tabBarIcon: ({ color, focused }) => (
             <User
