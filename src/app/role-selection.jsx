@@ -11,6 +11,7 @@ import { Home, Users, Building2 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTheme } from "../utils/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RoleSelectionScreen() {
   const insets = useSafeAreaInsets();
@@ -38,14 +39,15 @@ export default function RoleSelectionScreen() {
     },
     {
       id: "builder",
-      title: "Builder / Developer",
+      title: "Builder",
       description: "I develop and sell properties or projects",
       icon: Building2,
     },
   ];
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedRole) return;
+    await AsyncStorage.setItem("role",selectedRole)
     router.push("/otp-login");
   };
 

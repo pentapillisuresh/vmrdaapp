@@ -165,13 +165,13 @@ export default function OTPVerifyScreen() {
               key={index}
               ref={(ref) => (inputRefs.current[index] = ref)}
               style={{
-                width: 48,
+                width: 50,
                 height: 56,
                 borderRadius: 12,
                 borderWidth: 2,
                 borderColor: digit ? theme.colors.primary : theme.colors.border,
                 backgroundColor: theme.colors.input,
-                fontSize: 24,
+                fontSize: 20,
                 fontFamily: "Poppins_600SemiBold",
                 color: theme.colors.text,
                 textAlign: "center",

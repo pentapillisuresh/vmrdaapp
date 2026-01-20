@@ -18,6 +18,7 @@ import { ArrowLeft, Smartphone } from "lucide-react-native";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTheme } from "../utils/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function OTPLoginScreen() {
   const insets = useSafeAreaInsets();
@@ -31,12 +32,12 @@ export default function OTPLoginScreen() {
     Poppins_400Regular,
   });
 
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     if (!phone || phone.length < 10) {
       Alert.alert("Invalid Phone", "Please enter a valid phone number");
       return;
     }
-
+    await AsyncStorage.setItem("phone",phone)
     setLoading(true);
     // Simulate OTP sending
     setTimeout(() => {
