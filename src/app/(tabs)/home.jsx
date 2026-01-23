@@ -1,64 +1,154 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useState } from "react";
-import {
-  useFonts,
-  Poppins_600SemiBold,
-  Poppins_400Regular,
-  Poppins_500Medium,
-} from "@expo-google-fonts/poppins";
-import {
-  Search,
-  MapPin,
-  Heart,
-  Bed,
-  Bath,
-  Maximize,
-  SlidersHorizontal,
-} from "lucide-react-native";
-import { router } from "expo-router";
+import { useState, useEffect, useCallback } from "react";
+import { useFonts, Poppins_600SemiBold, Poppins_400Regular, Poppins_500Medium } from "@expo-google-fonts/poppins";
+import { Search, MapPin, Heart, Bed, Bath, Maximize, SlidersHorizontal } from "lucide-react-native";
+import { router, useFocusEffect } from "expo-router";
 import { useTheme } from "../../utils/theme";
-import { properties } from "../../utils/dummyData";
+import ApiService from "../../components/ApiService";
+
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedTab, setSelectedTab] = useState("properties"); // "properties" or "projects"
   const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [cityLocalities, setCityLocalities] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
-  const [loaded, error] = useFonts({
+  const [loaded, fontError] = useFonts({
     Poppins_600SemiBold,
     Poppins_500Medium,
     Poppins_400Regular,
   });
 
-  const categories = [
-    { id: "all", label: "All" },
-    { id: "apartment", label: "Apartments" },
-    { id: "villa", label: "Villas" },
-    { id: "plot", label: "Plots" },
-    { id: "land", label: "Land" },
-    { id: "commercial", label: "Commercial" },
-//     { id: "project", label: "Projects" },
-  ];
+  const getDashBoardData = async () => {
+    setLoading(true);
+    setError(null);
 
-  const filteredProperties = properties.filter((property) => {
-    const matchesCategory =
-      selectedCategory === "all" || property.category === selectedCategory;
-    const matchesSearch =
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch && property.status === "active";
-  });
+    try {
+      const response = await ApiService.get(`/dashboard`, {
+        params: { limit, page }
+      });
+      if (response?.status) {
+        const dashboardData = response?.data;
+        // Transform API categories to match the UI format
+        const transformedCategories = [
+          { id: "all", label: "All" },
+          ...dashboardData.categories.map(category => ({
+            id: category.id,
+            label: category.name
+          }))
+        ];
+        setCategories(transformedCategories);
 
+        // Set properties from mostViewedProperties
+        if (dashboardData.mostViewedProperties?.properties) {
+          const propertiesList = dashboardData.mostViewedProperties.properties;
+          setProperties(propertiesList);
+          setHasMore(dashboardData.mostViewedProperties.currentPage <
+            dashboardData.mostViewedProperties.totalPages);
+        }
+        // Set projects from mostViewedProjects
+        if (dashboardData.mostViewedProjects?.projects) {
+          const projectsList = dashboardData.mostViewedProjects.projects;
+          setProjects(projectsList);
+        }
+
+        setCityLocalities(dashboardData?.cityLocalities || []);
+      } else {
+        setError('Failed to get dashboard data.');
+      }
+    } catch (err) {
+      console.error("dashboard data error:", err);
+      setError(
+        err?.response?.data?.message ||
+        'Failed to get dashboard data.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMoreProperties = async () => {
+    if (!hasMore || loading) return;
+
+    const nextPage = page + 1;
+    setLoading(true);
+
+    try {
+      const response = await ApiService.get(`/dashboard`, {
+        params: { limit, page: nextPage }
+      });
+
+      if (response.data?.status) {
+        const dashboardData = response.data.data;
+        if (dashboardData.mostViewedProperties?.properties) {
+          setProperties(prev => [...prev, ...dashboardData.mostViewedProperties.properties]);
+          setHasMore(dashboardData.mostViewedProperties.currentPage <
+            dashboardData.mostViewedProperties.totalPages);
+          setPage(nextPage);
+        }
+      }
+    } catch (err) {
+      console.error("Load more error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      getDashBoardData();
+    }, [])
+  );
+
+  // Transform API property data to match the UI format
+  const transformPropertyData = (property) => {
+    return {
+      id: property.id,
+      title: property.title || property.propertyName,
+      location: `${property.address?.locality}, ${property.address?.city}`,
+      category: property.category?.id || "all",
+      price: parseFloat(property.price) || 0,
+      images: property.photos || [],
+      featured: property.status === "verified",
+      bedrooms: property.profile?.bedrooms || 0,
+      bathrooms: property.profile?.bathrooms || 0,
+      area: property.profile?.carpetArea || property.profile?.plotArea || property.profile?.landArea || 0,
+      areaUnit: property.profile?.areaUnit || "sqft",
+      status: property.isActive ? "active" : "inactive",
+      isSold: property.isSold || false,
+      isProject: property.isProject || false
+    };
+  };
+
+  // Filter properties based on selected tab, category and search
+  const getFilteredData = () => {
+    const dataList = selectedTab === "properties" ? properties : projects;
+
+    return dataList
+      .map(transformPropertyData)
+      .filter((item) => {
+        const matchesCategory =
+          selectedCategory === "all" || item.category === selectedCategory;
+        const matchesSearch =
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.location.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch && item.status === "active" && !item.isSold;
+      });
+  };
+
+  const filteredProperties = getFilteredData();
   const formatPrice = (price) => {
     if (price >= 10000000) {
       return `₹${(price / 10000000).toFixed(2)} Cr`;
@@ -68,8 +158,17 @@ export default function HomeScreen() {
     return `₹${price.toLocaleString()}`;
   };
 
-  if (!loaded && !error) {
+  if (!loaded && !fontError) {
     return null;
+  }
+
+  if (loading && properties.length === 0) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }}>
+        <StatusBar style={theme.statusBarStyle} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
   }
 
   return (
@@ -202,6 +301,77 @@ export default function HomeScreen() {
           );
         })}
       </ScrollView>
+      {/* Properties/Projects Tabs */}
+      <View style={{
+        flexDirection: "row",
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border,
+        backgroundColor: theme.colors.background,
+      }}>
+        <TouchableOpacity
+          onPress={() => setSelectedTab("properties")}
+          style={{
+            flex: 1,
+            paddingVertical: 10,
+            alignItems: "center",
+            borderRadius: 8,
+            backgroundColor: selectedTab === "properties"
+              ? theme.colors.primary
+              : theme.colors.surface,
+            borderWidth: 1,
+            borderColor: selectedTab === "properties"
+              ? theme.colors.primary
+              : theme.colors.border,
+            marginRight: 8,
+          }}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: "Poppins_500Medium",
+              color: selectedTab === "properties"
+                ? "#FFFFFF"
+                : theme.colors.text,
+            }}
+          >
+            Properties ({properties.filter(p => !p.isProject && p.isActive && !p.isSold).length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setSelectedTab("projects")}
+          style={{
+            flex: 1,
+            paddingVertical: 10,
+            alignItems: "center",
+            borderRadius: 8,
+            backgroundColor: selectedTab === "projects"
+              ? theme.colors.primary
+              : theme.colors.surface,
+            borderWidth: 1,
+            borderColor: selectedTab === "projects"
+              ? theme.colors.primary
+              : theme.colors.border,
+            marginLeft: 8,
+          }}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: "Poppins_500Medium",
+              color: selectedTab === "projects"
+                ? "#FFFFFF"
+                : theme.colors.text,
+            }}
+          >
+            Projects ({projects.filter(p => p.isProject && p.isActive && !p.isSold).length})
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Properties List */}
       <ScrollView
@@ -211,204 +381,237 @@ export default function HomeScreen() {
           paddingBottom: insets.bottom + 20,
         }}
         showsVerticalScrollIndicator={false}
-      >
-        {filteredProperties.map((property) => (
-          <TouchableOpacity
-            key={property.id}
-            onPress={() => router.push(`/property-details?id=${property.id}`)}
-            style={{
-              marginHorizontal: 20,
-              marginBottom: 16,
-              backgroundColor: theme.colors.surface,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              overflow: "hidden",
-              ...theme.elevation.card,
-            }}
-            activeOpacity={0.8}
-          >
-            {/* Image */}
-            <View style={{ position: "relative" }}>
-              <Image
-                source={{ uri: property.images[0] }}
-                style={{ width: "100%", height: 200 }}
-              />
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
 
-              {/* Featured Badge */}
-              {property.featured && (
-                <View
+          if (isCloseToBottom && hasMore && !loading) {
+            loadMoreProperties();
+          }
+        }}
+        scrollEventThrottle={400}
+      >
+        {filteredProperties.map((property) => {
+          const image = JSON.parse(property.images)[0]
+          return (
+            <TouchableOpacity
+              key={property.id}
+              onPress={() => router.push({
+                pathname: "/property-details",
+                params: {
+                  id: property.id,
+                  properties: JSON.stringify(transformPropertyData(property))
+                }
+              })}
+              style={{
+                marginHorizontal: 20,
+                marginBottom: 16,
+                backgroundColor: theme.colors.surface,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                overflow: "hidden",
+                ...theme.elevation.card,
+              }}
+              activeOpacity={0.8}
+            >
+              {/* Image */}
+              <View style={{ position: "relative" }}>
+                <Image
+                  source={
+                    image
+                      ? { uri: image }
+                      : require("../../../assets/images/applogo.png")
+                  }
+                  style={{ width: "100%", height: 200 }}
+                  resizeMode="cover"
+                />
+
+
+                {/* Featured Badge */}
+                {property.featured && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      left: 12,
+                      backgroundColor: property.isProject
+                        ? "#10B981"
+                        : theme.colors.primary,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontFamily: "Poppins_500Medium",
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      {property.isProject ? "Project" : property.featured ? "Featured" : "Property"}                    </Text>
+                  </View>
+                )}
+
+                {/* Wishlist Button */}
+                <TouchableOpacity
                   style={{
                     position: "absolute",
                     top: 12,
-                    left: 12,
-                    backgroundColor: theme.colors.primary,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 12,
+                    right: 12,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
+                  activeOpacity={0.7}
                 >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontFamily: "Poppins_500Medium",
-                      color: "#FFFFFF",
-                    }}
-                  >
-                    Featured
-                  </Text>
-                </View>
-              )}
-
-              {/* Wishlist Button */}
-              <TouchableOpacity
-                style={{
-                  position: "absolute",
-                  top: 12,
-                  right: 12,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                activeOpacity={0.7}
-              >
-                <Heart
-                  size={20}
-                  color={theme.colors.primary}
-                  strokeWidth={1.5}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Details */}
-            <View style={{ padding: 16 }}>
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontFamily: "Poppins_600SemiBold",
-                  color: theme.colors.text,
-                  marginBottom: 4,
-                }}
-              >
-                {property.title}
-              </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <MapPin
-                  size={16}
-                  color={theme.colors.textSecondary}
-                  strokeWidth={1.5}
-                />
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontFamily: "Poppins_400Regular",
-                    color: theme.colors.textSecondary,
-                    marginLeft: 4,
-                  }}
-                >
-                  {property.location}
-                </Text>
+                  <Heart
+                    size={20}
+                    color={theme.colors.primary}
+                    strokeWidth={1.5}
+                  />
+                </TouchableOpacity>
               </View>
 
-              {/* Property Stats */}
-              {(property.bedrooms > 0 || property.bathrooms > 0) && (
+              {/* Details */}
+              <View style={{ padding: 16 }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontFamily: "Poppins_600SemiBold",
+                    color: theme.colors.text,
+                    marginBottom: 4,
+                  }}
+                >
+                  {property.title}
+                </Text>
+
                 <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 16,
                     marginBottom: 12,
                   }}
                 >
-                  {property.bedrooms > 0 && (
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <Bed
-                        size={16}
-                        color={theme.colors.textSecondary}
-                        strokeWidth={1.5}
-                      />
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          fontFamily: "Poppins_400Regular",
-                          color: theme.colors.textSecondary,
-                          marginLeft: 4,
-                        }}
-                      >
-                        {property.bedrooms} Bed
-                      </Text>
-                    </View>
-                  )}
-
-                  {property.bathrooms > 0 && (
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <Bath
-                        size={16}
-                        color={theme.colors.textSecondary}
-                        strokeWidth={1.5}
-                      />
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          fontFamily: "Poppins_400Regular",
-                          color: theme.colors.textSecondary,
-                          marginLeft: 4,
-                        }}
-                      >
-                        {property.bathrooms} Bath
-                      </Text>
-                    </View>
-                  )}
-
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Maximize
-                      size={16}
-                      color={theme.colors.textSecondary}
-                      strokeWidth={1.5}
-                    />
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        fontFamily: "Poppins_400Regular",
-                        color: theme.colors.textSecondary,
-                        marginLeft: 4,
-                      }}
-                    >
-                      {property.area} {property.areaUnit}
-                    </Text>
-                  </View>
+                  <MapPin
+                    size={16}
+                    color={theme.colors.textSecondary}
+                    strokeWidth={1.5}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontFamily: "Poppins_400Regular",
+                      color: theme.colors.textSecondary,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {property.location}
+                  </Text>
                 </View>
-              )}
 
-              {/* Price */}
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontFamily: "Poppins_600SemiBold",
-                  color: theme.colors.primary,
-                }}
-              >
-                {formatPrice(property.price)}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+                {/* Property Stats */}
+                {(property.bedrooms > 0 || property.bathrooms > 0) && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 16,
+                      marginBottom: 12,
+                    }}
+                  >
+                    {property.bedrooms > 0 && (
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <Bed
+                          size={16}
+                          color={theme.colors.textSecondary}
+                          strokeWidth={1.5}
+                        />
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            fontFamily: "Poppins_400Regular",
+                            color: theme.colors.textSecondary,
+                            marginLeft: 4,
+                          }}
+                        >
+                          {property.bedrooms} Bed
+                        </Text>
+                      </View>
+                    )}
 
-        {filteredProperties.length === 0 && (
+                    {property.bathrooms > 0 && (
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <Bath
+                          size={16}
+                          color={theme.colors.textSecondary}
+                          strokeWidth={1.5}
+                        />
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            fontFamily: "Poppins_400Regular",
+                            color: theme.colors.textSecondary,
+                            marginLeft: 4,
+                          }}
+                        >
+                          {property.bathrooms} Bath
+                        </Text>
+                      </View>
+                    )}
+
+                    {property.area > 0 && (
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Maximize
+                          size={16}
+                          color={theme.colors.textSecondary}
+                          strokeWidth={1.5}
+                        />
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            fontFamily: "Poppins_400Regular",
+                            color: theme.colors.textSecondary,
+                            marginLeft: 4,
+                          }}
+                        >
+                          {property.area} {property.areaUnit}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Price */}
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Poppins_600SemiBold",
+                    color: theme.colors.primary,
+                  }}
+                >
+                  {formatPrice(property.price)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )
+        })}
+
+        {loading && filteredProperties.length > 0 && (
+          <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          </View>
+        )}
+
+        {filteredProperties.length === 0 && !loading && (
           <View
             style={{
               paddingVertical: 60,
@@ -425,8 +628,7 @@ export default function HomeScreen() {
                 marginBottom: 8,
               }}
             >
-              No Properties Found
-            </Text>
+              No {selectedTab === "properties" ? "Properties" : "Projects"} Found            </Text>
             <Text
               style={{
                 fontSize: 14,

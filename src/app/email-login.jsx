@@ -18,6 +18,8 @@ import { ArrowLeft, Mail, Lock } from "lucide-react-native";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTheme } from "../utils/theme";
+import { saveAuth } from "../utils/auth/auth";
+import ApiService from "../components/ApiService";
 
 export default function EmailLoginScreen() {
   const insets = useSafeAreaInsets();
@@ -32,18 +34,33 @@ export default function EmailLoginScreen() {
     Poppins_400Regular,
   });
 
-  const handleLogin = () => {
+  /* ---------------- LOGIN ---------------- */
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter email and password");
       return;
     }
 
-    setLoading(true);
-    // Simulate login
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      setLoading(true);
+
+      const response = await ApiService.post("/auth/login/client", { email, password });
+
+      if (!response?.token) {
+        Alert.alert("Login Failed", response?.message || "Invalid credentials");
+        return;
+      }
+      console.log("rrr:::", response);
+      // ✅ Save JWT + client
+      await saveAuth(response.token, response.client);
+
       router.replace("/(tabs)/home");
-    }, 1000);
+    } catch (error) {
+      console.error("Login Error:", error);
+      Alert.alert("Error", "Unable to login. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!loaded && !error) {

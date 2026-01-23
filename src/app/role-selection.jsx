@@ -47,8 +47,13 @@ export default function RoleSelectionScreen() {
 
   const handleContinue = async () => {
     if (!selectedRole) return;
-    await AsyncStorage.setItem("role",selectedRole)
-    router.push("/otp-login");
+    await AsyncStorage.setItem("role",selectedRole);
+    router.push({
+      pathname: "/signup-section",
+      params: {
+        role: selectedRole,
+      },
+    });
   };
 
   if (!loaded && !error) {

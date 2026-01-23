@@ -71,7 +71,7 @@ export default function TabLayout() {
             <PlusCircle
               color={color}
               size={26}
-              fill={focused ? color : "transparent"}
+              // fill={focused ? color : "transparent"}
               strokeWidth={2}
             />
           ),

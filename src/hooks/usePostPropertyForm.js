@@ -1,20 +1,38 @@
 // hooks/usePostPropertyForm.js
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Alert } from "react-native";
 import { router } from "expo-router";
+import ApiService from "../components/ApiService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuth } from "../utils/auth/auth";
 
 export function usePostPropertyForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({});
 
+    // 🎯 Category options
+    const category = [
+      { id: "plot", label: "Plot", icon: "map-pin" },
+      { id: "land", label: "Land", icon: "map-pin" },
+      { id: "apartment", label: "Apartment", icon: "building" },
+      { id: "villa", label: "Villa", icon: "home" },
+      { id: "commercial", label: "Commercial", icon: "briefcase" },
+      { id: "shop", label: "Shop", icon: "store" },
+      { id: "office", label: "Office", icon: "briefcase" },
+      { id: "warehouse", label: "Warehouse", icon: "warehouse" },
+      { id: "farmhouse", label: "Farmhouse", icon: "home" },
+    ];
+  
   // 🏠 Step 1: Basic Details (Category, Property Type, Title)
   const [listingType, setListingType] = useState("Sale");
   const [propertyType, setPropertyType] = useState("residential");
   const [propertySubtype, setPropertySubtype] = useState("");
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState("");
-
-  // 📍 Step 2: Location Details
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+    // 📍 Step 2: Location Details
   const [propertyName, setPropertyName] = useState("");
   const [city, setCity] = useState("");
   const [locality, setLocality] = useState("");
@@ -29,7 +47,6 @@ export function usePostPropertyForm() {
   // 📷 Step 3: Media (Photos & Videos)
   const [photos, setPhotos] = useState([]);
   const [videos, setVideos] = useState(null);
-  const [voiceOver, setVoiceOver] = useState(null);
 
   // 🛋️ Step 4: Property Profile (Web's PropertyProfile + Amenities)
   const [plotArea, setPlotArea] = useState(0);
@@ -79,12 +96,15 @@ export function usePostPropertyForm() {
   const [parkingSpaces, setParkingSpaces] = useState("");
   const [securityAvailable, setSecurityAvailable] = useState(false);
   const [waterSupply, setWaterSupply] = useState("");
-
+  
   // 🏢 Step 5: Pricing & Others (Description, Approved By, Amenities)
   const [description, setDescription] = useState("");
   const [privateNotes, setPrivateNotes] = useState("");
-  const [approvedBy, setApprovedBy] = useState([]);
+  const [approvedBy, setApprovedBy] = useState("");
   const [amenities, setAmenities] = useState([]);
+  
+  const [loading, setLoading] = useState(false);
+
 
   // 🏗️ Property type flags
   const isPlotOrLand = ["Plot", "Land", "Commercial Land", "Warehouse / Godown", "Industrial Building"].includes(propertySubtype);
@@ -99,30 +119,71 @@ export function usePostPropertyForm() {
   const needsUnitNumber = isFlat || isOfficeSpace || isShopShowroom;
   const canHaveCommercialAddons = isOfficeSpace || isShopShowroom;
 
-  // 🎯 Category options
-  const categories = [
-    { id: "plot", label: "Plot", icon: "map-pin" },
-    { id: "land", label: "Land", icon: "map-pin" },
-    { id: "apartment", label: "Apartment", icon: "building" },
-    { id: "villa", label: "Villa", icon: "home" },
-    { id: "commercial", label: "Commercial", icon: "briefcase" },
-    { id: "shop", label: "Shop", icon: "store" },
-    { id: "office", label: "Office", icon: "briefcase" },
-    { id: "warehouse", label: "Warehouse", icon: "warehouse" },
-    { id: "farmhouse", label: "Farmhouse", icon: "home" },
-  ];
-
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { token, user } = await getAuth();
+        const clientId = user?.id;
+    
+        const response = await ApiService.get("/categories", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+  
+        if (response?.categories) {
+          setCategories(response.categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+  
+    fetchCategories();
+  }, []);
+  
   // 🏠 Subtype mapping
   const getSubtypes = () => {
-    if (propertyType === "residential") {
-      return listingType.toLowerCase() === "sale"
-        ? ["Plot", "Flat/Apartment", "IndependentHouse/Villa", "Land", "FarmHouse"]
-        : ["Flat/Apartment", "IndependentHouse/Villa", "FarmHouse", "Plot", "Land"];
-    } else {
-      return ["Office Space", "Shop / Showroom", "Commercial Land", "Warehouse / Godown", "Industrial Building"];
-    }
+    const catType =
+      propertyType === "residential" ? "Residential" : "Commercial";
+  
+    let filtered = categories.filter(
+      (cat) =>
+        cat.catType === catType &&
+        cat.status === "active"
+    );
+  
+    // Custom order based on listingType
+    const customOrder =
+      listingType.toLowerCase() === "sale"
+        ? [
+            "Plot",
+            "Flat/Apartment",
+            "Independent House / Villa",
+            "Land",
+            "FarmHouse",
+          ]
+        : [
+            "Flat/Apartment",
+            "Independent House / Villa",
+            "FarmHouse",
+            "Plot",
+            "Land",
+          ];
+  
+    filtered.sort((a, b) => {
+      const indexA = customOrder.indexOf(a.name);
+      const indexB = customOrder.indexOf(b.name);
+  
+      return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+    });
+  
+    return filtered;
   };
-
+  
   // 🏗️ Amenities options
   const amenitiesOptions = [
     'Security',
@@ -162,6 +223,11 @@ export function usePostPropertyForm() {
           Alert.alert("Required", "Please select a property type");
           return false;
         }
+        console.log("setp:1");
+        console.log("listtype:",listingType);
+        console.log("propertytype:",propertyType);
+        console.log("selectectCategory:",propertySubtype);
+        console.log("selectectCategoryID:",selectedCategoryId);
         setTitleError('');
         return true;
 
@@ -195,10 +261,26 @@ export function usePostPropertyForm() {
             return false;
           }
         }
+
+        console.log("step:2");
+        console.log("propertyName:", propertyName);
+        console.log("city:", city);
+        console.log("locality:", locality);
+        console.log("subLocality:", subLocality);
+        console.log("apartmentDoorNo:", apartmentDoorNo);
+        console.log("roadFacing:", roadFacing);
+        console.log("pincode:", pincode);
+        console.log("lat:", lat);
+        console.log("lon:", lon);
+        console.log("advantages:", advantages);
+
         return true;
 
       case 3: // Media
         // Photos are optional but recommended
+        console.log("step:3");
+        console.log("photos:", photos);
+        console.log("video:", videos);
         return true;
 
       case 4: // Property Profile
@@ -278,6 +360,52 @@ export function usePostPropertyForm() {
             return false;
           }
         }
+
+        console.log("step:3");
+        plotArea && console.log("plotArea:", plotArea);
+        landArea && console.log("landArea:", landArea);
+        plotAreaUnit && console.log("plotAreaUnit:", plotAreaUnit);
+        length && console.log("length:", length);
+        breadth && console.log("breadth:", breadth);
+        facing && console.log("facing:", facing);
+        frontage && console.log("frontage:", frontage);
+        price && console.log("price:", price);
+        advance && console.log("advance:", advance);
+        bedrooms && console.log("bedrooms:", bedrooms);
+        bathrooms && console.log("bathrooms:", bathrooms);
+        balconies && console.log("balconies:", balconies);
+        poojaRoom && console.log("poojaRoom:", poojaRoom);
+        carpetArea && console.log("carpetArea:", carpetArea);
+        builtArea && console.log("builtArea:", builtArea);
+        superBuiltArea && console.log("superBuiltArea:", superBuiltArea);
+        areaUnit && console.log("areaUnit:", areaUnit);
+        parkingType && console.log("parkingType:", parkingType);
+        closedParking && console.log("closedParking:", closedParking);
+        openParking && console.log("openParking:", openParking);
+        status && console.log("status:", status);
+        possession && console.log("possession:", possession);
+        ageOfProperty && console.log("ageOfProperty:", ageOfProperty);
+        flatNumber && console.log("flatNumber:", flatNumber);
+        units && console.log("units:", units);
+        officeNumber && console.log("officeNumber:", officeNumber);
+        shopNumber && console.log("shopNumber:", shopNumber);
+        totalFloors && console.log("totalFloors:", totalFloors);
+        propertyOnFloor && console.log("propertyOnFloor:", propertyOnFloor);
+        roadWidth && console.log("roadWidth:", roadWidth);
+        cornerShop && console.log("cornerShop:", cornerShop);
+        pantryAvailable && console.log("pantryAvailable:", pantryAvailable);
+        washroomAvailable && console.log("washroomAvailable:", washroomAvailable);
+        liftAvailable && console.log("liftAvailable:", liftAvailable);
+        powerBackup && console.log("powerBackup:", powerBackup);
+        acAvailable && console.log("acAvailable:", acAvailable);
+        furnishedStatus && console.log("furnishedStatus:", furnishedStatus);
+        cabins && console.log("cabins:", cabins);
+        conferenceRooms && console.log("conferenceRooms:", conferenceRooms);
+        workstations && console.log("workstations:", workstations);
+        parkingSpaces && console.log("parkingSpaces:", parkingSpaces);
+        securityAvailable && console.log("securityAvailable:", securityAvailable);
+        waterSupply && console.log("waterSupply:", waterSupply);
+                
         return true;
 
       case 5: // Pricing & Others
@@ -308,111 +436,248 @@ export function usePostPropertyForm() {
     }
   };
 
-  const handleSubmit = () => {
-    if (!validateStep(5)) {
-      return;
-    }
+  // const handleSubmit = () => {
+  //   if (!validateStep(5)) {
 
-    // Compile all data
-    const finalData = {
-      // Step 1
-      listingType,
-      propertyType,
-      propertySubtype,
-      title,
-      
-      // Step 2
-      propertyName,
-      city,
-      locality,
-      subLocality,
-      apartmentDoorNo,
-      roadFacing,
-      pincode,
-      lat,
-      lon,
-      advantages,
-      
-      // Step 3
-      photos,
-      videos,
-      voiceOver,
-      
-      // Step 4
-      plotArea,
-      landArea,
-      plotAreaUnit,
-      length,
-      breadth,
-      facing,
-      frontage,
-      price,
-      advance,
-      bedrooms,
-      bathrooms,
-      balconies,
-      poojaRoom,
-      carpetArea,
-      builtArea,
-      superBuiltArea,
-      areaUnit,
-      parkingType,
-      closedParking,
-      openParking,
-      status,
-      possession,
-      ageOfProperty,
-      flatNumber,
-      units,
-      officeNumber,
-      shopNumber,
-      totalFloors,
-      propertyOnFloor,
-      roadWidth,
-      cornerShop,
-      pantryAvailable,
-      washroomAvailable,
-      liftAvailable,
-      powerBackup,
-      acAvailable,
-      furnishedStatus,
-      cabins,
-      conferenceRooms,
-      workstations,
-      parkingSpaces,
-      securityAvailable,
-      waterSupply,
-      
-      // Step 5
-      description,
-      privateNotes,
-      approvedBy,
-      amenities: amenitiesOptions.filter(opt => amenities.includes(opt)),
-    };
+  //     return;
+  //   }
 
-    console.log("Property Data:", finalData);
+  //   // Compile all data
+  //   const finalData = {
+  //     // Step 1
+  //     listingType,
+  //     propertyType,
+  //     propertySubtype,
+  //     title,
+  //     loadingCategories,
+  //     selectedCategoryId,  
+      
+  //     // Step 2
+  //     propertyName,
+  //     city,
+  //     locality,
+  //     subLocality,
+  //     apartmentDoorNo,
+  //     roadFacing,
+  //     pincode,
+  //     lat,
+  //     lon,
+  //     advantages,
+      
+  //     // Step 3
+  //     photos,
+  //     videos,
+
+  //     // Step 4
+  //     plotArea,
+  //     landArea,
+  //     plotAreaUnit,
+  //     length,
+  //     breadth,
+  //     facing,
+  //     frontage,
+  //     price,
+  //     advance,
+  //     bedrooms,
+  //     bathrooms,
+  //     balconies,
+  //     poojaRoom,
+  //     carpetArea,
+  //     builtArea,
+  //     superBuiltArea,
+  //     areaUnit,
+  //     parkingType,
+  //     closedParking,
+  //     openParking,
+  //     status,
+  //     possession,
+  //     ageOfProperty,
+  //     flatNumber,
+  //     units,
+  //     officeNumber,
+  //     shopNumber,
+  //     totalFloors,
+  //     propertyOnFloor,
+  //     roadWidth,
+  //     cornerShop,
+  //     pantryAvailable,
+  //     washroomAvailable,
+  //     liftAvailable,
+  //     powerBackup,
+  //     acAvailable,
+  //     furnishedStatus,
+  //     cabins,
+  //     conferenceRooms,
+  //     workstations,
+  //     parkingSpaces,
+  //     securityAvailable,
+  //     waterSupply,
+      
+  //     // Step 5
+  //     description,
+  //     privateNotes,
+  //     approvedBy,
+  //     amenities: amenitiesOptions.filter(opt => amenities.includes(opt)),
+  //   };
+
+  //   console.log("Property Data:", finalData);
     
-    Alert.alert(
-      "Success!",
-      "Your property has been submitted for verification.",
-      [
-        {
-          text: "OK",
-          onPress: () => router.push("/(tabs)/my-listings"),
-        },
-      ]
-    );
-  };
+  //   Alert.alert(
+  //     "Success!",
+  //     "Your property has been submitted for verification.",
+  //     [
+  //       {
+  //         text: "OK",
+  //         // onPress: () => router.push("/(tabs)/my-listings"),
+  //       },
+  //     ]
+  //   );
+  // };
 
   // Helper functions
-  const toggleApprovedBy = (option) => {
-    if (approvedBy.includes(option)) {
-      setApprovedBy(approvedBy.filter(item => item !== option));
-    } else {
-      setApprovedBy([...approvedBy, option]);
+  
+  const handleSubmit = async (status = "published") => {
+    // 🔐 Validation (same logic as web)
+    if (status === "published" && !validateStep(5)) {
+      Alert.alert("Validation Error", "Please fill all required fields");
+      return;
+    }
+  
+    setLoading(true);
+
+    try {
+      // 🧩 Build propertyData (MATCHES WEB STRUCTURE)
+      const propertyDataToSave = {
+        categoryId: selectedCategoryId,
+        propertyName,
+        title,
+        description,
+        propertySubtype,
+        marketType: listingType,            // sale / rent / lease
+        propertyKind: propertyType,          // residential / commercial
+        catType: propertyType === "commercial" ? "Commercial" : "Residential",
+        price,
+        photos,
+        videos,
+        audio: null,
+        availableStatus: possession || "Ready to Move",
+        ageOfProperty,
+        youtubeUrl: "",
+        approvedBy,
+        amenities: amenitiesOptions.filter(opt => amenities.includes(opt)),
+  
+        // 📍 Address
+        address: {
+          city,
+          locality,
+          subLocality,
+          apartmentDoorNo,
+          pincode,
+          near_by: advantages,
+          road_facing: roadFacing,
+          lat,
+          lon,
+        },
+  
+        // 🏠 Property Profile
+        propertyProfile: {
+          type: propertySubtype,
+          bedrooms,
+          units,
+          landArea,
+          plotArea,
+          poojaRooms: poojaRoom,
+          bathrooms,
+          length,
+          breath: breadth,
+          balconies,
+          roadFacing,
+          facing,
+          carpetArea,
+          closedParking,
+          openParking,
+          parkingType,
+          status,
+          areaUnit,
+          buildArea: builtArea,
+          // superBuildArea,
+          shopNumber,
+          frontage,
+          roadWidth,
+          pantryAvailable,
+          washroomAvailable,
+          cornerShop,
+          powerBackup,
+          waterSupply,
+          officeNumber,
+          floorNumber: propertyOnFloor,
+          totalFloors,
+          workstations,
+          cabins,
+          conferenceRooms,
+          furnishedStatus,
+          acAvailable,
+          liftAvailable,
+          parkingSpaces,
+          securityAvailable,
+        },
+      };
+  
+      // 🧪 Debug (optional)
+      console.log("📦 Property Data To Save:", propertyDataToSave);
+  
+      // 🔑 Token (RN-safe)
+      const {user,token} = await getAuth(); // Replace with actual client data retrieval
+      const clientId = user ? user?.id : null;
+  
+      const response = await ApiService.post(
+        "/properties",
+        propertyDataToSave,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      if (response) {
+        setSuccess(true);
+        Alert.alert(
+          "Success!",
+          "Your property has been submitted for verification.",
+          [{ text: "OK" }]
+        );
+      } else {
+        const errorMsg =
+          response?.message || "Something went wrong while saving the property";
+        setError(errorMsg);
+        Alert.alert("Error", errorMsg);
+      }
+    } catch (err) {
+      const errorMsg =
+        err?.message || "Network error occurred. Please try again.";
+      setError(errorMsg);
+      Alert.alert("Error", errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
-
+  
+  const toggleApprovedBy = (option) => {
+    const current = approvedBy
+      ? approvedBy.split(", ").filter(Boolean)
+      : [];
+  
+    if (current.includes(option)) {
+      // remove
+      const updated = current.filter(item => item !== option);
+      setApprovedBy(updated.join(", "));
+    } else {
+      // add
+      setApprovedBy([...current, option].join(", "));
+    }
+  };
   const toggleAmenity = (amenity) => {
     if (amenities.includes(amenity)) {
       setAmenities(amenities.filter(item => item !== amenity));
@@ -453,6 +718,10 @@ export function usePostPropertyForm() {
     setTitle,
     titleError,
     categories,
+    loadingCategories,
+    selectedCategoryId,
+    setSelectedCategoryId,
+
     getSubtypes,
     
     // Step 2
@@ -484,8 +753,6 @@ export function usePostPropertyForm() {
     setPhotos,
     videos,
     setVideos,
-    voiceOver,
-    setVoiceOver,
     
     // Step 4
     plotArea,

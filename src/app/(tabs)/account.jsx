@@ -1,37 +1,100 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  useFonts,
-  Poppins_600SemiBold,
-  Poppins_400Regular,
-  Poppins_500Medium,
-} from "@expo-google-fonts/poppins";
-import {
-  User,
-  Heart,
-  Clock,
-  Settings,
-  Bell,
-  HelpCircle,
-  Shield,
-  LogOut,
-  ChevronRight,
-} from "lucide-react-native";
-import { router } from "expo-router";
+import { useFonts, Poppins_600SemiBold, Poppins_400Regular, Poppins_500Medium } from "@expo-google-fonts/poppins";
+import { User, Heart, Clock, Settings, Bell, HelpCircle, Shield, LogOut, ChevronRight } from "lucide-react-native";
+import { router, useFocusEffect } from "expo-router";
 import { useTheme } from "../../utils/theme";
 import { userProfile } from "../../utils/dummyData";
+import { getAuth, saveAuth } from "../../utils/auth/auth";
+import { useCallback, useEffect, useState } from "react";
+import ApiService from "../../components/ApiService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState({
+    id: "",
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+    profileImage: "",
+    joinedDate: "",
+    companyName: "",
+    address: "",
+    area: "",
+    bio: "",
+    website: "",
+    status: "",
+  });
+  const [originalData, setOriginalData] = useState({ ...profileData });
+
+  const fetchClientData = async () => {
+    setLoading(true);
+    try {
+      const { token, user } = await getAuth();
+      const clientId = user?.id;
+
+      if (!token || !user) {
+        Alert.alert("Error", "Please login to view profile");
+        router.replace("/login-selection");
+        return;
+      }
+
+      const response = await ApiService.get(
+        `/clients/getClient/${clientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("API RESPONSE::", response);
+
+      if (response?.client) {
+        const client = response.client;
+
+        const mappedProfile = {
+          id: client.id,
+          name: client.fullName ?? "N/A",
+          email: client.email ?? "N/A",
+          phone: client.phoneNumber ?? "N/A",
+          role: client.role ?? "N/A",
+          profileImage:
+            client.profilePic ??
+            "", // fallback image
+          joinedDate: client.createdAt ?? "N/A",
+          companyName: client.companyName ?? "N/A",
+          address: client.address ?? "N/A",
+          area: client.area ?? "N/A",
+          bio: client.bio ?? "N/A",
+          website: client.website ?? "N/A",
+          status: client.status ?? "N/A",
+        };
+
+        await saveAuth(token, client);
+        setProfileData(mappedProfile);
+        setOriginalData(mappedProfile); 
+        console.log("rrr:::",profileData.role)
+      }
+    } catch (error) {
+      console.error("Error fetching client:", error);
+      Alert.alert("Error", "Failed to fetch profile data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refresh on focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchClientData();
+    }, [])
+  );
 
   const [loaded, error] = useFonts({
     Poppins_600SemiBold,
@@ -59,7 +122,7 @@ export default function AccountScreen() {
       title: "Settings",
       description: "App preferences",
       icon: Settings,
-      onPress: () => Alert.alert("Settings", "Settings coming soon"),
+      onPress: () => router.push("/editProfile")
     },
     {
       id: "notifications",
@@ -146,7 +209,11 @@ export default function AccountScreen() {
             }}
           >
             <Image
-              source={{ uri: userProfile.profileImage }}
+            source={
+              profileData.profileImage
+                ? { uri: profileData.profileImage }
+                : require("../../../assets/images/applogo.png")
+            }
               style={{
                 width: 60,
                 height: 60,
@@ -164,7 +231,7 @@ export default function AccountScreen() {
                   marginBottom: 4,
                 }}
               >
-                {userProfile.name}
+                {profileData.name}
               </Text>
               <Text
                 style={{
@@ -174,7 +241,7 @@ export default function AccountScreen() {
                   marginBottom: 6,
                 }}
               >
-                {userProfile.email}
+                {profileData.email}
               </Text>
               <View
                 style={{
@@ -192,7 +259,7 @@ export default function AccountScreen() {
                     color: "#FFFFFF",
                   }}
                 >
-                  {userProfile.role.toUpperCase()}
+                  {profileData.role.toUpperCase()}
                 </Text>
               </View>
             </View>

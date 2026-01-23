@@ -1,7 +1,10 @@
 // components/PostProperty/MediaUploadStep.js
+import { useState,useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
-import { Image as ImageIcon, Video, Mic, X, Upload } from "lucide-react-native";
+import { Image as ImageIcon, Video, X } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import ApiService from "../ApiService";
 
 export function MediaUploadStep({
   theme,
@@ -9,68 +12,189 @@ export function MediaUploadStep({
   setPhotos,
   videos,
   setVideos,
-  voiceOver,
-  setVoiceOver,
 }) {
-  const pickImages = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      quality: 0.8,
-    });
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState({
+    photos: 0,
+    videos: 0,
+    voice: 0,
+  });
+  
 
-    if (!result.canceled) {
-      const newPhotos = result.assets.map(asset => ({
-        uri: asset.uri,
-        type: "image",
-        name: asset.fileName || `photo_${Date.now()}.jpg`,
-      }));
-      setPhotos([...photos, ...newPhotos]);
+  
+const uploadWithProgress = async (url, formData, type, setProgress, token) => {
+  try {
+    const res = await ApiService.post(url, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+      onUploadProgress: (event) => {
+        const percent = Math.round((event.loaded * 100) / event.total);
+        setProgress((prev) => ({ ...prev, [type]: percent }));
+      },
+    });
+    console.log("rrr::",res)
+    return res.data;
+  } catch (err) {
+    console.error(`❌ ${type} upload failed`, err);
+    return null;
+  }
+};
+
+  const handleSubmit = async () => {
+    setUploading(true);
+    setProgress({ photos: 0, videos: 0, voice: 0 });
+  
+    const { token, user } = await getAuth(); // Replace with actual client data retrieval
+    const clientId = user ? user?.id : null;
+
+    let uploadedPhotoUrls = [];
+    let uploadedVideoUrl = videos?.url || null;
+  
+    try {
+      /* ---------------- PHOTOS ---------------- */
+      const newPhotos = photos.filter((p) => p.isNew);
+  
+      if (newPhotos.length > 0) {
+        const form = new FormData();
+  
+        newPhotos.forEach((photo) => {
+          form.append("images", {
+            uri: photo.uri,
+            name: photo.name,
+            type: "image/jpeg",
+          });
+        });
+  
+        const res = await uploadWithProgress(
+          "/images/upload-multiple",
+          form,
+          "photos",
+          setProgress,
+          token
+        );
+  
+        if (res?.images) {
+          uploadedPhotoUrls = res.images.map((img) => img.url);
+        }
+      }
+  
+      const existingPhotos = photos
+        .filter((p) => !p.isNew)
+        .map((p) => p.url);
+  
+      const finalPhotos = [...existingPhotos, ...uploadedPhotoUrls];
+  
+      /* ---------------- VIDEO ---------------- */
+      if (videos?.isNew) {
+        const form = new FormData();
+        form.append("video", {
+          uri: videos.uri,
+          name: videos.name,
+          type: "video/mp4",
+        });
+  
+        const res = await uploadWithProgress(
+          "/images/uploadVideo",
+          form,
+          "videos",
+          setProgress,
+          token
+        );
+  
+        uploadedVideoUrl = res?.url;
+      }
+  
+      /* ---------------- FINAL PAYLOAD ---------------- */
+      const finalData = {
+        photos: finalPhotos,
+        videos: uploadedVideoUrl,
+      };
+  
+      console.log("✅ Final Uploaded Data:", finalData);
+  
+      // updateData(finalData); // same as web
+      onNext();              // go to next step
+    } catch (err) {
+      console.error("❌ Upload error:", err);
+    } finally {
+      setUploading(false);
     }
   };
 
+  const applyWatermark = async (uri) => {
+    try {
+      const result = await ImageManipulator.manipulateAsync(
+        uri,
+        [
+          [{
+            overlay: {
+              uri: Image.resolveAssetSource(require("../../../assets/images/favicon.png")).uri,
+              position: { x: 100, y: 100 }
+            }
+          }],
+        ],
+        { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+      return result.uri;
+    } catch (err) {
+      console.error("Watermark failed:", err);
+      return uri; // fallback
+    }
+  };
+
+  // --- Pick Images ---
+  const pickImages = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const processedPhotos = [];
+      for (const asset of result.assets) {
+        const watermarkedUri = await applyWatermark(asset.uri);
+
+        processedPhotos.push({
+          uri: watermarkedUri,
+          originalUri: asset.uri,
+          name: asset.fileName || `photo_${Date.now()}.jpg`,
+          type: "image/jpeg",
+          isNew: true,
+        });
+      }
+      setPhotos((prev) => [...prev, ...processedPhotos]);
+      console.log("Photos::",photos)
+
+    }
+  };
+
+  // --- Pick Video ---
   const pickVideo = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      quality: 0.8,
+      quality: 1,
     });
 
     if (!result.canceled) {
+      const asset = result.assets[0];
       setVideos({
-        uri: result.assets[0].uri,
-        type: "video",
-        name: result.assets[0].fileName || `video_${Date.now()}.mp4`,
-      });
-    }
-  };
-
-  const pickAudio = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Audio,
-    });
-
-    if (!result.canceled) {
-      setVoiceOver({
-        uri: result.assets[0].uri,
-        type: "audio",
-        name: result.assets[0].fileName || `audio_${Date.now()}.m4a`,
+        uri: asset.uri,
+        name: asset.fileName || `video_${Date.now()}.mp4`,
+        type: "video/mp4",
+        isNew: true,
       });
     }
   };
 
   const removePhoto = (index) => {
-    const updated = [...photos];
-    updated.splice(index, 1);
-    setPhotos(updated);
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const removeVideo = () => {
-    setVideos(null);
-  };
-
-  const removeVoiceOver = () => {
-    setVoiceOver(null);
-  };
+  const removeVideo = () => setVideos(null);
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -147,50 +271,51 @@ export function MediaUploadStep({
         </TouchableOpacity>
 
         {photos.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              {photos.map((photo, index) => (
-                <View key={index} style={{ position: "relative" }}>
-                  <Image
-                    source={{ uri: photo.uri }}
-                    style={{
-                      width: 100,
-                      height: 100,
-                      borderRadius: 8,
-                      backgroundColor: theme.colors.border,
-                    }}
-                  />
-                  <TouchableOpacity
-                    onPress={() => removePhoto(index)}
-                    style={{
-                      position: "absolute",
-                      top: 4,
-                      right: 4,
-                      backgroundColor: theme.colors.error,
-                      borderRadius: 12,
-                      padding: 4,
-                    }}
-                  >
-                    <X size={12} color="#FFFFFF" />
-                  </TouchableOpacity>
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: 4,
-                      left: 4,
-                      backgroundColor: "rgba(0,0,0,0.6)",
-                      paddingHorizontal: 6,
-                      paddingVertical: 2,
-                      borderRadius: 4,
-                    }}
-                  >
-                    <Text style={{ fontSize: 10, color: "#FFFFFF", fontFamily: "Poppins_400Regular" }}>
-                      vmrdaplots.com
-                    </Text>
-                  </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {photos.map((photo, index) => (
+              <View key={index} style={{ marginRight: 10 }}>
+                <Image
+                  source={{ uri: photo.uri }}
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: 8,
+                  }}
+                />
+
+                {/* Remove */}
+                <TouchableOpacity
+                  onPress={() => removePhoto(index)}
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    backgroundColor: theme.colors.error,
+                    borderRadius: 12,
+                    padding: 4,
+                  }}
+                >
+                  <X size={12} color="#fff" />
+                </TouchableOpacity>
+
+                {/* Watermark badge */}
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 4,
+                    left: 4,
+                    backgroundColor: "rgba(0,0,0,0.6)",
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 10, color: "#fff" }}>
+                    vmrdaplots.com
+                  </Text>
                 </View>
-              ))}
-            </View>
+              </View>
+            ))}
           </ScrollView>
         )}
       </View>
@@ -259,77 +384,6 @@ export function MediaUploadStep({
                 {videos.name || "Video file"}
               </Text>
               <TouchableOpacity onPress={removeVideo}>
-                <X size={18} color={theme.colors.error} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Voice-over */}
-      <View style={{ marginBottom: 24 }}>
-        <Text
-          style={{
-            fontSize: 14,
-            fontFamily: "Poppins_500Medium",
-            color: theme.colors.text,
-            marginBottom: 12,
-          }}
-        >
-          Voice-over (Optional)
-        </Text>
-
-        <TouchableOpacity
-          onPress={pickAudio}
-          style={{
-            backgroundColor: theme.colors.surface,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: theme.colors.border,
-            padding: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
-          activeOpacity={0.7}
-        >
-          <Mic size={24} color={theme.colors.primary} strokeWidth={1.5} />
-          <Text
-            style={{
-              fontSize: 14,
-              fontFamily: "Poppins_500Medium",
-              color: theme.colors.text,
-              marginLeft: 12,
-            }}
-          >
-            Upload Voice-over
-          </Text>
-        </TouchableOpacity>
-
-        {voiceOver && (
-          <View style={{ position: "relative" }}>
-            <View
-              style={{
-                backgroundColor: theme.colors.border,
-                borderRadius: 8,
-                padding: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <Mic size={20} color={theme.colors.text} />
-              <Text
-                style={{
-                  flex: 1,
-                  fontSize: 13,
-                  fontFamily: "Poppins_400Regular",
-                  color: theme.colors.text,
-                }}
-              >
-                {voiceOver.name || "Audio file"}
-              </Text>
-              <TouchableOpacity onPress={removeVoiceOver}>
                 <X size={18} color={theme.colors.error} />
               </TouchableOpacity>
             </View>

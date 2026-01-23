@@ -26,24 +26,24 @@ export function PricingOthersStep({
 }) {
   const calculateScore = () => {
     let score = 0;
-    
+
     // Basic details
     if (propertySubtype) score += 10;
     if (listingType) score += 10;
     if (city && locality) score += 10;
-    
+
     // Property profile
     if (price) score += 20;
     if (description && description.length >= 10) score += 10;
-    
+
     // Additional points
     if (propertyName && propertyName.length >= 10) score += 10;
     if (approvedBy.length > 0) score += 10;
     if (amenities.length > 0) score += 10;
-    
+
     // Media (assumed)
     score += 20;
-    
+
     return Math.min(score, 100);
   };
 
@@ -114,8 +114,8 @@ export function PricingOthersStep({
             {score >= 80
               ? "Great! Your property is ready to publish"
               : score >= 60
-              ? "Good job! Add more details for better visibility"
-              : "Add more details to improve your property listing"}
+                ? "Good job! Add more details for better visibility"
+                : "Add more details to improve your property listing"}
           </Text>
         </View>
       </View>
@@ -142,7 +142,7 @@ export function PricingOthersStep({
             {description.length}/10+ characters
           </Text>
         </View>
-        
+
         <TextInput
           style={{
             backgroundColor: theme.colors.input,
@@ -164,7 +164,7 @@ export function PricingOthersStep({
           multiline
           numberOfLines={6}
         />
-        
+
         {description.length > 0 && description.length < 10 && (
           <Text
             style={{
@@ -213,7 +213,7 @@ export function PricingOthersStep({
             {privateNotes.length}/100
           </Text>
         </View>
-        
+
         <TextInput
           style={{
             backgroundColor: theme.colors.input,
@@ -236,7 +236,7 @@ export function PricingOthersStep({
           numberOfLines={4}
           maxLength={100}
         />
-        
+
         <Text
           style={{
             fontSize: 11,
@@ -251,58 +251,58 @@ export function PricingOthersStep({
 
       {/* Approved By (Conditional) */}
       {((propertySubtype === 'Flat/Apartment' ||
-         propertySubtype === 'Plot' ||
-         propertySubtype === 'Independent House / Villa' ||
-         propertySubtype === 'IndependentHouse/Villa') &&
-         listingType.toLowerCase() === "sale") && (
-        <View style={{ marginBottom: 24 }}>
-          <Text
-            style={{
-              fontSize: 16,
-              fontFamily: "Poppins_600SemiBold",
-              color: theme.colors.text,
-              marginBottom: 12,
-            }}
-          >
-            Approved By
-          </Text>
-          
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {approvedOptions.map((option) => {
-              const isSelected = approvedBy.includes(option);
-              return (
-                <TouchableOpacity
-                  key={option}
-                  onPress={() => toggleApprovedBy(option)}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    borderRadius: 20,
-                    borderWidth: 2,
-                    borderColor: isSelected ? theme.colors.primary : theme.colors.border,
-                    backgroundColor: isSelected ? theme.colors.primary : "transparent",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                  activeOpacity={0.7}
-                >
-                  {isSelected && <Check size={14} color="#FFFFFF" />}
-                  <Text
+        propertySubtype === 'Plot' ||
+        propertySubtype === 'Independent House / Villa' ||
+        propertySubtype === 'IndependentHouse/Villa') &&
+        listingType.toLowerCase() === "sale") && (
+          <View style={{ marginBottom: 24 }}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontFamily: "Poppins_600SemiBold",
+                color: theme.colors.text,
+                marginBottom: 12,
+              }}
+            >
+              Approved By
+            </Text>
+
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {approvedOptions.map((option) => {
+                const isSelected = approvedBy.split(", ").includes(option);
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    onPress={() => toggleApprovedBy(option)}
                     style={{
-                      fontSize: 13,
-                      fontFamily: "Poppins_500Medium",
-                      color: isSelected ? "#FFFFFF" : theme.colors.text,
+                      paddingHorizontal: 16,
+                      paddingVertical: 10,
+                      borderRadius: 20,
+                      borderWidth: 2,
+                      borderColor: isSelected ? theme.colors.primary : theme.colors.border,
+                      backgroundColor: isSelected ? theme.colors.primary : "transparent",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
                     }}
+                    activeOpacity={0.7}
                   >
-                    {option}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                    {isSelected && <Check size={14} color="#FFFFFF" />}
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: "Poppins_500Medium",
+                        color: isSelected ? "#FFFFFF" : theme.colors.text,
+                      }}
+                    >
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
       {/* Amenities */}
       {(isFlatOrVilla || isPlotOrLand) && (
@@ -317,7 +317,7 @@ export function PricingOthersStep({
           >
             Amenities
           </Text>
-          
+
           <View style={{ gap: 10 }}>
             {amenitiesOptions.map((amenity) => {
               const isSelected = amenities.includes(amenity);
@@ -388,7 +388,7 @@ export function PricingOthersStep({
         >
           Property Summary
         </Text>
-        
+
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Home size={16} color={theme.colors.textSecondary} />
@@ -396,21 +396,21 @@ export function PricingOthersStep({
               {propertySubtype || "Not specified"}
             </Text>
           </View>
-          
+
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <MapPin size={16} color={theme.colors.textSecondary} />
             <Text style={{ fontSize: 14, fontFamily: "Poppins_400Regular", color: theme.colors.text, flex: 1 }}>
               {city && locality ? `${locality}, ${city}` : "Location not specified"}
             </Text>
           </View>
-          
+
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <DollarSign size={16} color={theme.colors.textSecondary} />
             <Text style={{ fontSize: 14, fontFamily: "Poppins_500Medium", color: theme.colors.primary, flex: 1 }}>
               {price ? `₹${price}` : "Price not set"}
             </Text>
           </View>
-          
+
           {propertyName && (
             <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
               <Star size={16} color={theme.colors.textSecondary} />
@@ -419,16 +419,23 @@ export function PricingOthersStep({
               </Text>
             </View>
           )}
-          
-          {approvedBy.length > 0 && (
+
+          {approvedBy && approvedBy.length > 0 && (
             <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
               <CheckCircle size={16} color={theme.colors.textSecondary} />
-              <Text style={{ fontSize: 14, fontFamily: "Poppins_400Regular", color: theme.colors.text, flex: 1 }}>
-                Approved by: {approvedBy.join(", ")}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: "Poppins_400Regular",
+                  color: theme.colors.text,
+                  flex: 1,
+                }}
+              >
+                Approved by: {approvedBy}
               </Text>
             </View>
           )}
-          
+
           {amenities.length > 0 && (
             <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
               <Check size={16} color={theme.colors.textSecondary} />

@@ -8,6 +8,7 @@ import {
 import { useEffect, useRef } from "react";
 import { router } from "expo-router";
 import { useTheme } from "../utils/theme";
+import { getAuth } from "../utils/auth/auth";
 
 export default function SplashScreen() {
   const theme = useTheme();
@@ -18,6 +19,19 @@ export default function SplashScreen() {
     Poppins_600SemiBold,
     Poppins_400Regular,
   });
+
+  const bootstrap = async () => {
+    console.log("eee:::")
+    const {token} = await getAuth();
+    console.log("rrr:::",token)
+    if (token) {
+      router.replace("/(tabs)/home");
+    } else {
+      router.replace("/login-selection");
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (loaded || error) {
@@ -36,7 +50,7 @@ export default function SplashScreen() {
       ]).start();
 
       const timer = setTimeout(() => {
-        router.replace("/login-selection");
+        bootstrap();
       }, 2500);
 
       return () => clearTimeout(timer);

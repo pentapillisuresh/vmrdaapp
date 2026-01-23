@@ -2,6 +2,8 @@
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { MapPin, Home, Navigation, Plus, X } from "lucide-react-native";
 import { Picker } from "@react-native-picker/picker";
+import { useEffect, useState } from "react";
+import ApiService from "../ApiService";
 
 export function LocationDetailsStep({
   theme,
@@ -30,16 +32,65 @@ export function LocationDetailsStep({
   propertySubtype,
   listingType,
 }) {
-  const isLand = propertySubtype?.toLowerCase().includes("land") || 
-                 propertySubtype?.toLowerCase().includes("plot");
-  const isProjectNameRequired = !((propertySubtype || "").toLowerCase().includes("land") || 
-                                  listingType.toLowerCase() === "rent");
+  const isLand = propertySubtype?.toLowerCase().includes("land") ||
+    propertySubtype?.toLowerCase().includes("plot");
+  const isProjectNameRequired = !((propertySubtype || "").toLowerCase().includes("land") ||
+    listingType.toLowerCase() === "rent");
 
   // Sample cities and localities (in real app, fetch from API)
-  const cities = ["Visakhapatnam", "Vijayawada", "Guntur", "Rajahmundry", "Tirupati"];
-  const localities = ["MVP Colony", "Gajuwaka", "Dabagardens", "Seethammadhara", "Madhurawada"];
+  const [cities, setCities] = useState([]);
+  const [localities, setLocalities] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const advantageDistances = ["250 m", "500 m", "1 km", "2 km", "5 km"];
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      setLoading(true);
+      try {
+        const res = await ApiService.get("/city", {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        // Default city logic
+        if (!city) {
+          const defaultCity = res.find(
+            (c) => c.city.toLowerCase() === "visakhapatnam"
+          );
+
+          if (defaultCity) {
+            setCity(defaultCity.city);
+            setLocalities(defaultCity.locality);
+          }
+        }
+
+        setCities(res);
+      } catch (err) {
+        console.error("Error fetching cities:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCities();
+  }, []);
+
+  useEffect(() => {
+    if (city && cities.length > 0) {
+      const selectedCity = cities.find(
+        (c) => c.city.toLowerCase() === city.toLowerCase()
+      );
+
+      if (selectedCity) {
+        setLocalities(selectedCity.locality);
+
+        // 🔑 Same rule as web
+        if (locality && !selectedCity.locality.includes(locality)) {
+          setLocality("");
+        }
+      }
+    }
+  }, [city, cities]);
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -71,14 +122,14 @@ export function LocationDetailsStep({
               style={{
                 fontSize: 12,
                 fontFamily: "Poppins_400Regular",
-                color: propertyName.length > 50 ? theme.colors.error : 
-                       propertyName.length >= 10 ? theme.colors.success : theme.colors.textSecondary,
+                color: propertyName.length > 50 ? theme.colors.error :
+                  propertyName.length >= 10 ? theme.colors.success : theme.colors.textSecondary,
               }}
             >
               {propertyName.length}/50
             </Text>
           </View>
-          
+
           <TextInput
             style={{
               backgroundColor: theme.colors.input,
@@ -97,7 +148,7 @@ export function LocationDetailsStep({
             onChangeText={setPropertyName}
             maxLength={50}
           />
-          
+
           {propertyName.length > 0 && propertyName.length < 10 && (
             <Text
               style={{
@@ -145,20 +196,13 @@ export function LocationDetailsStep({
             borderColor: theme.colors.border,
           }}
         >
-          <Picker
-            selectedValue={city}
-            onValueChange={setCity}
-            style={{
-              color: theme.colors.text,
-              fontSize: 14,
-              fontFamily: "Poppins_400Regular",
-            }}
-          >
+          <Picker selectedValue={city} onValueChange={setCity}>
             <Picker.Item label="Select a City" value="" />
             {cities.map((c) => (
-              <Picker.Item key={c} label={c} value={c} />
+              <Picker.Item key={c.id} label={c.city} value={c.city} />
             ))}
           </Picker>
+
         </View>
       </View>
 
@@ -187,15 +231,13 @@ export function LocationDetailsStep({
             selectedValue={locality}
             onValueChange={setLocality}
             enabled={!!city}
-            style={{
-              color: theme.colors.text,
-              fontSize: 14,
-              fontFamily: "Poppins_400Regular",
-            }}
           >
-            <Picker.Item label={city ? "Select a Locality" : "Select a City first"} value="" />
-            {localities.map((loc) => (
-              <Picker.Item key={loc} label={loc} value={loc} />
+            <Picker.Item
+              label={city ? "Select a Locality" : "Select a City first"}
+              value=""
+            />
+            {localities.map((loc, index) => (
+              <Picker.Item key={index} label={loc} value={loc} />
             ))}
           </Picker>
         </View>
@@ -233,39 +275,39 @@ export function LocationDetailsStep({
       </View>
 
       {/* Apartment/Society Name */}
-      {!isLand && (propertySubtype === "Flat/Apartment" || 
-                   propertySubtype === "IndependentHouse/Villa" || 
-                   propertySubtype === "Independent House / Villa") && (
-        <View style={{ marginBottom: 20 }}>
-          <Text
-            style={{
-              fontSize: 14,
-              fontFamily: "Poppins_500Medium",
-              color: theme.colors.text,
-              marginBottom: 8,
-            }}
-          >
-            {propertySubtype === "Flat/Apartment" ? "Apartment Name" : "Society / Villa Name"}
-          </Text>
-          <TextInput
-            style={{
-              backgroundColor: theme.colors.input,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              fontSize: 14,
-              fontFamily: "Poppins_400Regular",
-              color: theme.colors.text,
-            }}
-            placeholder="e.g., D-201, apartment/society name"
-            placeholderTextColor={theme.colors.placeholder}
-            value={apartmentDoorNo}
-            onChangeText={setApartmentDoorNo}
-          />
-        </View>
-      )}
+      {!isLand && (propertySubtype === "Flat/Apartment" ||
+        propertySubtype === "IndependentHouse/Villa" ||
+        propertySubtype === "Independent House / Villa") && (
+          <View style={{ marginBottom: 20 }}>
+            <Text
+              style={{
+                fontSize: 14,
+                fontFamily: "Poppins_500Medium",
+                color: theme.colors.text,
+                marginBottom: 8,
+              }}
+            >
+              {propertySubtype === "Flat/Apartment" ? "Apartment Name" : "Society / Villa Name"}
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: theme.colors.input,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                fontSize: 14,
+                fontFamily: "Poppins_400Regular",
+                color: theme.colors.text,
+              }}
+              placeholder="e.g., D-201, apartment/society name"
+              placeholderTextColor={theme.colors.placeholder}
+              value={apartmentDoorNo}
+              onChangeText={setApartmentDoorNo}
+            />
+          </View>
+        )}
 
       {/* Road Facing */}
       <View style={{ marginBottom: 20 }}>
@@ -385,8 +427,38 @@ export function LocationDetailsStep({
             />
           </View>
         </View>
-      </View>
 
+      </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "Poppins_400Regular",
+                color: theme.colors.textSecondary,
+                marginBottom: 4,
+              }}
+            >
+              Pincode
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: theme.colors.input,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontSize: 14,
+                fontFamily: "Poppins_400Regular",
+                color: theme.colors.text,
+              }}
+              placeholder="Pincode"
+              placeholderTextColor={theme.colors.placeholder}
+              value={pincode}
+              onChangeText={setPincode}
+              keyboardType="decimal-pad"
+            />
+          </View>
       {/* Location Advantages */}
       <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.colors.border }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -409,7 +481,7 @@ export function LocationDetailsStep({
             {advantages.length}/8
           </Text>
         </View>
-        
+
         <Text
           style={{
             fontSize: 13,
@@ -451,7 +523,7 @@ export function LocationDetailsStep({
                 value={item.info}
                 onChangeText={(text) => updateAdvantage(index, "info", text)}
               />
-              
+
               <View
                 style={{
                   backgroundColor: theme.colors.input,
@@ -475,7 +547,7 @@ export function LocationDetailsStep({
                   ))}
                 </Picker>
               </View>
-              
+
               {advantages.length > 1 && (
                 <TouchableOpacity
                   onPress={() => removeAdvantage(index)}
@@ -522,7 +594,7 @@ export function LocationDetailsStep({
             </Text>
           </TouchableOpacity>
         )}
-        
+
         {advantages.length >= 8 && (
           <Text
             style={{

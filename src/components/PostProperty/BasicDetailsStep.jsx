@@ -1,6 +1,7 @@
 // components/PostProperty/BasicDetailsStep.js
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { Home, Building, MapPin, Tag } from "lucide-react-native";
+import { useState } from "react";
 
 export function BasicDetailsStep({
   theme,
@@ -14,10 +15,13 @@ export function BasicDetailsStep({
   setTitle,
   titleError,
   categories,
+  loadingCategories,
+  selectedCategoryId,
+  setSelectedCategoryId,
   getSubtypes,
 }) {
   const subtypes = getSubtypes();
-
+const [isUpdate,setIsupdate]=useState(false)
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <Text
@@ -120,6 +124,7 @@ export function BasicDetailsStep({
       </View>
 
       {/* Property Subtype */}
+      {/* Property Subtype */}
       {propertyType && (
         <View style={{ marginBottom: 24 }}>
           <Text
@@ -132,36 +137,50 @@ export function BasicDetailsStep({
           >
             Property Subtype *
           </Text>
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ flexDirection: "row", gap: 8 }}
+            contentContainerStyle={{ gap: 8 }}
           >
-            {subtypes.map((subtype) => (
-              <TouchableOpacity
-                key={subtype}
-                onPress={() => setPropertySubtype(subtype)}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  borderRadius: 20,
-                  borderWidth: 2,
-                  borderColor: propertySubtype === subtype ? theme.colors.primary : theme.colors.border,
-                  backgroundColor: propertySubtype === subtype ? theme.colors.primary : "transparent",
-                }}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontFamily: "Poppins_500Medium",
-                    color: propertySubtype === subtype ? "#FFFFFF" : theme.colors.text,
+            {subtypes.map((subtype) => {
+              const isActive =
+                propertySubtype?.toLowerCase().trim() ===
+                subtype.name?.toLowerCase().trim();
+              return (
+                <TouchableOpacity
+                  key={subtype.id}
+                  onPress={() => {
+                    setPropertySubtype(subtype.name);
+                    setSelectedCategoryId(subtype.id);
+                    setIsupdate(!isUpdate)
                   }}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 20,
+                    borderWidth: 2,
+                    borderColor: isActive
+                      ? theme.colors.primary
+                      : theme.colors.border,
+                    backgroundColor: isActive
+                      ? theme.colors.primary
+                      : "transparent",
+                  }}
+                  activeOpacity={0.7}
                 >
-                  {subtype}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontFamily: "Poppins_500Medium",
+                      color: isActive ? "#FFFFFF" : theme.colors.text,
+                    }}
+                  >
+                    {subtype.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
       )}
@@ -188,7 +207,7 @@ export function BasicDetailsStep({
             {title.length}/70
           </Text>
         </View>
-        
+
         <TextInput
           style={{
             backgroundColor: theme.colors.input,
@@ -207,7 +226,7 @@ export function BasicDetailsStep({
           onChangeText={setTitle}
           maxLength={70}
         />
-        
+
         {titleError ? (
           <Text
             style={{

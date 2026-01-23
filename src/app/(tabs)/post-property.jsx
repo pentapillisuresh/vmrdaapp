@@ -45,7 +45,10 @@ export default function PostPropertyScreen() {
     titleError,
     categories,
     getSubtypes,
-    
+    loadingCategories,
+    selectedCategoryId,
+    setSelectedCategoryId,
+
     // Step 2
     propertyName,
     setPropertyName,
@@ -69,14 +72,12 @@ export default function PostPropertyScreen() {
     addAdvantage,
     removeAdvantage,
     updateAdvantage,
-    
+
     // Step 3
     photos,
     setPhotos,
     videos,
     setVideos,
-    voiceOver,
-    setVoiceOver,
     
     // Step 4
     plotArea,
@@ -165,7 +166,7 @@ export default function PostPropertyScreen() {
     setSecurityAvailable,
     waterSupply,
     setWaterSupply,
-    
+
     // Step 5
     description,
     setDescription,
@@ -178,7 +179,7 @@ export default function PostPropertyScreen() {
     amenitiesOptions,
     approvedOptions,
     facingOptions,
-    
+
     // Property type flags
     isPlotOrLand,
     isLand,
@@ -191,7 +192,7 @@ export default function PostPropertyScreen() {
     needsFloorDetails,
     needsUnitNumber,
     canHaveCommercialAddons,
-    
+
     // Handlers
     handleNext,
     handleBack,
@@ -280,6 +281,8 @@ export default function PostPropertyScreen() {
             setTitle={setTitle}
             titleError={titleError}
             categories={categories}
+            selectedCategoryId={selectedCategoryId}
+            setSelectedCategoryId={setSelectedCategoryId}
             getSubtypes={getSubtypes}
           />
         )}
@@ -323,8 +326,6 @@ export default function PostPropertyScreen() {
             setPhotos={setPhotos}
             videos={videos}
             setVideos={setVideos}
-            voiceOver={voiceOver}
-            setVoiceOver={setVoiceOver}
           />
         )}
 
