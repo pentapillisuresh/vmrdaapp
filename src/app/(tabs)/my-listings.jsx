@@ -35,6 +35,25 @@ export default function MyListingsScreen() {
     { id: "sold", label: "Sold", isSold: true },
   ];
 
+  const transformPropertyData = (property) => {
+    return {
+      id: property?.id,
+      title: property?.title || property?.propertyName,
+      location: `${property?.address?.locality}, ${property?.address?.city}`,
+      category: property?.category?.id || "all",
+      price: parseFloat(property?.price) || 0,
+      images: property?.photos || [],
+      featured: property?.status === "verified",
+      bedrooms: property?.profile?.bedrooms || 0,
+      bathrooms: property?.profile?.bathrooms || 0,
+      area: property?.profile?.carpetArea || property.profile?.plotArea || property.profile?.landArea || 0,
+      areaUnit: property?.profile?.areaUnit || "sqft",
+      status: property?.isActive ? "active" : "inactive",
+      isSold: property?.isSold || false,
+      isProject: property?.isProject || false
+    };
+  };
+
   // Fetch listings from API
   const fetchListings = async () => {
     setLoading(true);
@@ -195,10 +214,10 @@ export default function MyListingsScreen() {
 
   const confirmSold = async (id) => {
     try {
-      const {token, user} = await getAuth();
-
-      const response = await ApiService.put(`/properties/${id}`,
-        { isSold: true },
+      const {token,user} = await getAuth(); // Replace with actual token retrieval
+      
+      const response = await ApiService.put(`/properties/${id}`, 
+        { isSold: true }, 
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -276,13 +295,13 @@ export default function MyListingsScreen() {
         return photos.url;
       }
     } catch (error) {
-      console.error('Error parsing photos:', error);
+      console.error("Error parsing photos:", error);
     }
 
     console.log("Returning placeholder image");
     return "https://via.placeholder.com/400x300?text=No+Image";
   };
-
+  
   // Format price
   const formatPrice = (price) => {
     if (!price) return "Contact For Price";
@@ -610,7 +629,7 @@ export default function MyListingsScreen() {
               const status = getStatusColor(listing);
               const profile = listing?.propertyProfile || listing?.profile || {};
               const address = listing?.address || {};
-
+              console.log("rrr:::",listing)
               return (
                 <View
                   key={listing.id || listing._id}
@@ -840,6 +859,42 @@ export default function MyListingsScreen() {
                         }}
                       >
                         Delete
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => router.push({
+                        pathname: "/property-details",
+                params: {
+                  id: listing.id,
+                  properties: JSON.stringify(transformPropertyData(listing))
+                }
+                      })}
+                      style={{
+                        flex: 1,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 12,
+                        gap: 6,
+                        borderRightWidth: 1,
+                        borderRightColor: theme.colors.border,
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Eye
+                        size={16}
+                        color={theme.colors.text}
+                        strokeWidth={1.5}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontFamily: "Poppins_500Medium",
+                          color: theme.colors.text,
+                        }}
+                      >
+                        View Details
                       </Text>
                     </TouchableOpacity>
 

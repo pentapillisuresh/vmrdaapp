@@ -934,26 +934,49 @@ const SimilarPropertyCard = ({ property, onPress }) => {
   const address = property?.address || {};
   
   const getPhotoSrc = (photos) => {
-    if (!photos) return "https://via.placeholder.com/400x300?text=Property";
-    
+    const fallback = "https://via.placeholder.com/400x300?text=No+Image";
+    console.log("rrr::", photos);
+  
+    if (!photos) return fallback;
+  
     try {
+      // ✅ Case 1: Already an array
       if (Array.isArray(photos) && photos.length > 0) {
-        return photos[0];
-      } else if (typeof photos === 'string') {
-        // Check if it's a JSON string
-        if (photos.startsWith('[')) {
-          const parsed = JSON.parse(photos);
-          return parsed[0] || "https://via.placeholder.com/400x300?text=Property";
+        const first = photos[0];
+  
+        // Array of string URLs
+        if (typeof first === "string") {
+          return first;
         }
-        return photos;
+  
+        // Array of objects
+        return first?.uri || first?.originalUri || fallback;
+      }
+  
+      // ✅ Case 2: Stringified JSON array
+      if (typeof photos === "string") {
+        // Plain URL string
+        if (photos.startsWith("http") || photos.startsWith("file://")) {
+          return photos;
+        }
+  
+        const parsed = JSON.parse(photos);
+  
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const first = parsed[0];
+  
+          return typeof first === "string"
+            ? first
+            : first?.uri || first?.originalUri || fallback;
+        }
       }
     } catch (error) {
-      console.error('Error parsing photos:', error);
+      console.error("Error parsing photos:", error);
     }
-    
-    return "https://via.placeholder.com/400x300?text=Property";
+  
+    return fallback;
   };
-
+  
   return (
     <TouchableOpacity
       onPress={onPress}

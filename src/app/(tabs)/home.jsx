@@ -115,20 +115,20 @@ export default function HomeScreen() {
   // Transform API property data to match the UI format
   const transformPropertyData = (property) => {
     return {
-      id: property.id,
-      title: property.title || property.propertyName,
-      location: `${property.address?.locality}, ${property.address?.city}`,
+      id: property?.id,
+      title: property?.title || property?.propertyName,
+      location: `${property?.address?.locality}, ${property?.address?.city}`,
       category: property.category?.id || "all",
-      price: parseFloat(property.price) || 0,
-      images: property.photos || [],
-      featured: property.status === "verified",
-      bedrooms: property.profile?.bedrooms || 0,
-      bathrooms: property.profile?.bathrooms || 0,
-      area: property.profile?.carpetArea || property.profile?.plotArea || property.profile?.landArea || 0,
-      areaUnit: property.profile?.areaUnit || "sqft",
-      status: property.isActive ? "active" : "inactive",
-      isSold: property.isSold || false,
-      isProject: property.isProject || false
+      price: parseFloat(property?.price) || 0,
+      images: property?.photos || [],
+      featured: property?.status === "verified",
+      bedrooms: property?.profile?.bedrooms || 0,
+      bathrooms: property?.profile?.bathrooms || 0,
+      area: property?.profile?.carpetArea || property?.profile?.plotArea || property?.profile?.landArea || 0,
+      areaUnit: property?.profile?.areaUnit || "sqft",
+      status: property?.isActive ? "active" : "inactive",
+      isSold: property?.isSold || false,
+      isProject: property?.isProject || false
     };
   };
 
