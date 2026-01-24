@@ -39,29 +39,55 @@ export default function MyListingsScreen() {
   const fetchListings = async () => {
     setLoading(true);
     try {
-      // Get client ID from storage (adjust based on your storage method)
-      const {user,token} = await getAuth(); // Replace with actual client data retrieval
-      const clientId = user ? user?.id : null;
-      
-      if (!clientId) {
+      // Get client ID from storage
+      const {user, token} = await getAuth();
+
+      if (!user || !user.id) {
         Alert.alert("Error", "Please login to view your listings");
         setLoading(false);
         return;
       }
 
-      const response = await ApiService.get(`/properties?clientId=${clientId}`);
-      
+      // Call the API with proper authentication
+      const response = await ApiService.get(`/properties`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          clientId: user.id
+        }
+      });
+
+      console.log("API Response:", response); // Debug log
+
+      // Handle different response structures
+      let properties = [];
+
       if (response?.properties) {
-        const data = response.properties;
-        setListings(data);
-        filterListings(data, searchQuery, filterStatus);
-      } else {
-        setListings([]);
-        setFilteredListings([]);
+        // If response has properties array
+        properties = response.properties;
+      } else if (Array.isArray(response)) {
+        // If response is directly an array
+        properties = response;
+      } else if (response?.data?.properties) {
+        // If response has data.properties
+        properties = response.data.properties;
+      } else if (response?.data && Array.isArray(response.data)) {
+        // If response.data is an array
+        properties = response.data;
       }
+
+      // Filter properties that belong to the current user
+      const userProperties = properties.filter(property =>
+        property.clientId === user.id || property.createdBy === user.id
+      );
+
+      console.log("User properties:", userProperties); // Debug log
+      setListings(userProperties);
+      filterListings(userProperties, searchQuery, filterStatus);
     } catch (error) {
       console.error('Error fetching listings:', error);
-      Alert.alert("Error", "Failed to load listings");
+      Alert.alert("Error", "Failed to load listings. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -74,10 +100,10 @@ export default function MyListingsScreen() {
     if (query) {
       filtered = filtered.filter(
         (listing) =>
-          listing?.title?.toLowerCase().includes(query.toLowerCase()) ||
-          listing?.propertyName?.toLowerCase().includes(query.toLowerCase()) ||
-          (listing?.address?.locality?.toLowerCase().includes(query.toLowerCase())) ||
-          (listing?.address?.city?.toLowerCase().includes(query.toLowerCase()))
+          (listing?.title?.toLowerCase() || '').includes(query.toLowerCase()) ||
+          (listing?.propertyName?.toLowerCase() || '').includes(query.toLowerCase()) ||
+          (listing?.address?.locality?.toLowerCase() || '').includes(query.toLowerCase()) ||
+          (listing?.address?.city?.toLowerCase() || '').includes(query.toLowerCase())
       );
     }
 
@@ -124,10 +150,9 @@ export default function MyListingsScreen() {
 
   const confirmDelete = async (listing) => {
     try {
-      // Get token from storage (adjust based on your storage method)
-      const {token,user} = await getAuth(); // Replace with actual token retrieval
-      
-      const response = await ApiService.delete(`properties/${listing?.id}`, {
+      const {token, user} = await getAuth();
+
+      const response = await ApiService.delete(`/properties/${listing?.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -170,10 +195,10 @@ export default function MyListingsScreen() {
 
   const confirmSold = async (id) => {
     try {
-      const {token,user} = await getAuth(); // Replace with actual token retrieval
-      
-      const response = await ApiService.put(`/properties/${user.id}`, 
-        { isSold: true }, 
+      const {token, user} = await getAuth();
+
+      const response = await ApiService.put(`/properties/${id}`,
+        { isSold: true },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -181,7 +206,7 @@ export default function MyListingsScreen() {
         }
       );
 
-      if (response.data) {
+      if (response) {
         Alert.alert("Success", "Property marked as SOLD successfully!");
         fetchListings(); // Refresh the list
       }
@@ -191,24 +216,70 @@ export default function MyListingsScreen() {
     }
   };
 
-  // Get photo source
+  // Get photo source - FIXED VERSION
   const getPhotoSrc = (photos) => {
-    if (!photos) return "https://via.placeholder.com/400x300?text=No+Image";
-    
+    if (!photos) {
+      console.log("No photos available");
+      return "https://via.placeholder.com/400x300?text=No+Image";
+    }
+
     try {
-      if (Array.isArray(photos) && photos.length > 0) {
-        return photos[0];
-      } else if (typeof photos === 'string') {
-        if (photos.startsWith('[')) {
-          const parsed = JSON.parse(photos);
-          return parsed[0] || "https://via.placeholder.com/400x300?text=No+Image";
+      console.log("Photos data:", photos); // Debug log
+
+      if (Array.isArray(photos)) {
+        // If it's an array
+        if (photos.length > 0) {
+          const firstPhoto = photos[0];
+          // Check if photo is an object with uri property
+          if (typeof firstPhoto === 'object' && firstPhoto.uri) {
+            return firstPhoto.uri;
+          }
+          // Check if photo is an object with url property
+          else if (typeof firstPhoto === 'object' && firstPhoto.url) {
+            return firstPhoto.url;
+          }
+          // Check if it's a string URL
+          else if (typeof firstPhoto === 'string') {
+            return firstPhoto;
+          }
         }
-        return photos;
+      }
+      else if (typeof photos === 'string') {
+        // If it's a JSON string
+        if (photos.startsWith('[') || photos.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(photos);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const firstPhoto = parsed[0];
+              if (typeof firstPhoto === 'object' && firstPhoto.uri) {
+                return firstPhoto.uri;
+              } else if (typeof firstPhoto === 'string') {
+                return firstPhoto;
+              }
+            } else if (typeof parsed === 'object' && parsed.uri) {
+              return parsed.uri;
+            }
+          } catch (e) {
+            console.log("Failed to parse photos JSON:", e);
+          }
+        } else {
+          // If it's a simple string URL
+          return photos;
+        }
+      }
+      else if (typeof photos === 'object' && photos.uri) {
+        // If it's an object with uri property
+        return photos.uri;
+      }
+      else if (typeof photos === 'object' && photos.url) {
+        // If it's an object with url property
+        return photos.url;
       }
     } catch (error) {
       console.error('Error parsing photos:', error);
     }
-    
+
+    console.log("Returning placeholder image");
     return "https://via.placeholder.com/400x300?text=No+Image";
   };
 
@@ -233,7 +304,7 @@ export default function MyListingsScreen() {
         label: "Sold"
       };
     }
-    
+
     switch(listing?.status) {
       case 'verified':
         return { bg: "#D1FAE5", text: "#059669", label: "Active" };
@@ -244,6 +315,32 @@ export default function MyListingsScreen() {
       default:
         return { bg: "#E5E7EB", text: "#374151", label: "Inactive" };
     }
+  };
+
+  // Safe image component to prevent crashes
+  const SafeImage = ({ uri, style, ...props }) => {
+    const [error, setError] = useState(false);
+
+    // Validate URI
+    const isValidUri = uri && (uri.startsWith('http') || uri.startsWith('https') || uri.startsWith('file://'));
+
+    if (!isValidUri || error) {
+      return (
+        <View style={[style, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ color: '#999', fontSize: 12 }}>No Image</Text>
+        </View>
+      );
+    }
+
+    return (
+      <Image
+        source={{ uri }}
+        style={style}
+        resizeMode="cover"
+        onError={() => setError(true)}
+        {...props}
+      />
+    );
   };
 
   if (!loaded && !fontError) {
@@ -264,7 +361,7 @@ export default function MyListingsScreen() {
         }}
       >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, marginRight: 12 }}>
             <Text
               style={{
                 fontSize: 28,
@@ -285,20 +382,20 @@ export default function MyListingsScreen() {
               View and manage all your property listings
             </Text>
           </View>
-          
+
           <TouchableOpacity
             onPress={() => router.push("/post-property")}
             style={{
               backgroundColor: theme.colors.primary,
-              paddingHorizontal: 20,
-              paddingVertical: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
               borderRadius: 30,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 8,
+              gap: 6,
             }}
           >
-            <Plus size={20} color="#FFFFFF" />
+            <Plus size={18} color="#FFFFFF" />
             <Text
               style={{
                 fontSize: 14,
@@ -306,35 +403,32 @@ export default function MyListingsScreen() {
                 color: "#FFFFFF",
               }}
             >
-              Add New Listing
+              Add New
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Search and Filter */}
-        <View style={{ 
-          backgroundColor: "#FFFFFF", 
-          borderRadius: 12, 
-          padding: 16, 
+        <View style={{
+          backgroundColor: theme.colors.surface,
+          borderRadius: 12,
+          padding: 12,
           marginTop: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
         }}>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             {/* Search Input */}
             <View style={{ flex: 1, position: 'relative' }}>
-              <Search 
-                size={20} 
-                color={theme.colors.textSecondary} 
-                style={{ position: 'absolute', left: 12, top: 12, zIndex: 1 }}
+              <Search
+                size={20}
+                color={theme.colors.textSecondary}
+                style={{ position: 'absolute', left: 12, top: 10, zIndex: 1 }}
               />
               <TextInput
                 style={{
                   flex: 1,
-                  height: 44,
+                  height: 40,
                   borderWidth: 1,
                   borderColor: theme.colors.border,
                   borderRadius: 8,
@@ -343,6 +437,7 @@ export default function MyListingsScreen() {
                   fontSize: 14,
                   fontFamily: "Poppins_400Regular",
                   color: theme.colors.text,
+                  backgroundColor: theme.colors.background,
                 }}
                 placeholder="Search by title or location..."
                 placeholderTextColor={theme.colors.textSecondary}
@@ -351,25 +446,31 @@ export default function MyListingsScreen() {
               />
             </View>
 
-            {/* Filter Dropdown */}
-            <View style={{ 
-              flexDirection: 'row', 
-              alignItems: 'center', 
-              gap: 8,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              borderRadius: 8,
-              paddingHorizontal: 12,
-            }}>
-              <Filter size={20} color={theme.colors.textSecondary} />
-              <Text style={{ 
-                fontSize: 14, 
-                fontFamily: "Poppins_400Regular", 
-                color: theme.colors.text 
+            {/* Filter Button */}
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                backgroundColor: theme.colors.background,
+                justifyContent: 'center',
+                paddingVertical: 8,
+              }}
+              onPress={() => Alert.alert("Filter", "Filter functionality coming soon")}
+            >
+              <Filter size={18} color={theme.colors.textSecondary} />
+              <Text style={{
+                fontSize: 14,
+                fontFamily: "Poppins_400Regular",
+                color: theme.colors.text
               }}>
                 Filter
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -382,12 +483,13 @@ export default function MyListingsScreen() {
           paddingHorizontal: 20,
           gap: 8,
           paddingVertical: 12,
+          paddingBottom: 16,
         }}
         style={{
           flexGrow: 0,
           borderBottomWidth: 1,
           borderBottomColor: theme.colors.border,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.colors.surface,
         }}
       >
         {tabs.map((tab) => {
@@ -397,18 +499,18 @@ export default function MyListingsScreen() {
             if (tab.status) return listing?.status === tab.status;
             return true;
           }).length;
-          
+
           return (
             <TouchableOpacity
               key={tab.id}
               onPress={() => setFilterStatus(tab.id)}
               style={{
-                paddingHorizontal: 20,
-                paddingVertical: 10,
+                paddingHorizontal: 18,
+                paddingVertical: 8,
                 borderRadius: 20,
                 backgroundColor: isSelected
                   ? theme.colors.primary
-                  : theme.colors.surface,
+                  : theme.colors.background,
                 borderWidth: 1,
                 borderColor: isSelected
                   ? theme.colors.primary
@@ -434,14 +536,16 @@ export default function MyListingsScreen() {
                     backgroundColor: isSelected
                       ? "rgba(255, 255, 255, 0.3)"
                       : theme.colors.border,
-                    paddingHorizontal: 8,
+                    paddingHorizontal: 6,
                     paddingVertical: 2,
                     borderRadius: 10,
+                    minWidth: 24,
+                    alignItems: 'center',
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                       fontFamily: "Poppins_600SemiBold",
                       color: isSelected ? "#FFFFFF" : theme.colors.text,
                     }}
@@ -460,41 +564,41 @@ export default function MyListingsScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingTop: 16,
-          paddingBottom: insets.bottom + 20,
+          paddingBottom: insets.bottom + 100,
         }}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
-          <View style={{ paddingVertical: 60, alignItems: 'center' }}>
+          <View style={{ paddingVertical: 80, alignItems: 'center' }}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={{ 
-              marginTop: 16, 
-              fontSize: 16, 
+            <Text style={{
+              marginTop: 16,
+              fontSize: 16,
               fontFamily: "Poppins_500Medium",
-              color: theme.colors.text 
+              color: theme.colors.text
             }}>
-              Loading listings...
+              Loading your listings...
             </Text>
           </View>
         ) : (
           <>
             {/* Results Count */}
-            <View style={{ 
-              paddingHorizontal: 20, 
-              paddingBottom: 12,
+            <View style={{
+              paddingHorizontal: 20,
+              paddingVertical: 12,
+              backgroundColor: theme.colors.surface,
               borderBottomWidth: 1,
               borderBottomColor: theme.colors.border,
-              backgroundColor: "#FFFFFF"
             }}>
-              <Text style={{ 
-                fontSize: 14, 
+              <Text style={{
+                fontSize: 14,
                 fontFamily: "Poppins_400Regular",
-                color: theme.colors.textSecondary 
+                color: theme.colors.textSecondary
               }}>
                 Showing{" "}
-                <Text style={{ 
-                  fontFamily: "Poppins_600SemiBold", 
-                  color: theme.colors.text 
+                <Text style={{
+                  fontFamily: "Poppins_600SemiBold",
+                  color: theme.colors.text
                 }}>
                   {filteredListings.length}
                 </Text>{" "}
@@ -504,43 +608,38 @@ export default function MyListingsScreen() {
 
             {filteredListings.map((listing) => {
               const status = getStatusColor(listing);
-              const profile = listing?.profile || {};
+              const profile = listing?.propertyProfile || listing?.profile || {};
               const address = listing?.address || {};
-              
+
               return (
                 <View
-                  key={listing.id}
+                  key={listing.id || listing._id}
                   style={{
                     marginHorizontal: 20,
                     marginBottom: 16,
                     backgroundColor: theme.colors.surface,
-                    borderRadius: 16,
+                    borderRadius: 12,
                     borderWidth: 1,
                     borderColor: theme.colors.border,
                     overflow: "hidden",
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3,
                   }}
                 >
                   {/* Sold Badge */}
                   {listing?.isSold && (
-                    <View style={{ 
-                      position: 'absolute', 
-                      top: 12, 
-                      right: 12, 
+                    <View style={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
                       zIndex: 10,
                       backgroundColor: "#DC2626",
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
                       borderRadius: 6,
-                      borderWidth: 2,
+                      borderWidth: 1.5,
                       borderColor: "#FFFFFF"
                     }}>
-                      <Text style={{ 
-                        fontSize: 12, 
+                      <Text style={{
+                        fontSize: 11,
                         fontFamily: "Poppins_600SemiBold",
                         color: "#FFFFFF",
                         textTransform: 'uppercase'
@@ -553,14 +652,13 @@ export default function MyListingsScreen() {
                   <TouchableOpacity
                     onPress={() => router.push({
                       pathname: "/property-details",
-                      params: { id: listing.id }
+                      params: { id: listing.id || listing._id }
                     })}
                     activeOpacity={0.8}
                   >
-                    <Image
-                      source={{ uri: getPhotoSrc(listing.photos) }}
+                    <SafeImage
+                      uri={getPhotoSrc(listing.photos)}
                       style={{ width: "100%", height: 180 }}
-                      resizeMode="cover"
                     />
 
                     <View style={{ padding: 16 }}>
@@ -575,16 +673,16 @@ export default function MyListingsScreen() {
                         <View style={{ flex: 1, marginRight: 12 }}>
                           <Text
                             style={{
-                              fontSize: 18,
+                              fontSize: 16,
                               fontFamily: "Poppins_600SemiBold",
                               color: theme.colors.text,
-                              marginBottom: 8,
+                              marginBottom: 6,
                             }}
                             numberOfLines={2}
                           >
-                            {listing.title}
+                            {listing.title || "Untitled Property"}
                           </Text>
-                          
+
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
                             <MapPin size={14} color={theme.colors.textSecondary} />
                             <Text style={{
@@ -592,12 +690,12 @@ export default function MyListingsScreen() {
                               fontFamily: "Poppins_400Regular",
                               color: theme.colors.textSecondary,
                             }}>
-                              {address?.locality ? `${address.locality}, ${address.city}` : address?.city}
+                              {address?.locality ? `${address.locality}, ${address.city}` : address?.city || "Location not specified"}
                             </Text>
                           </View>
-                          
+
                           <Text style={{
-                            fontSize: 20,
+                            fontSize: 18,
                             fontFamily: "Poppins_600SemiBold",
                             color: theme.colors.primary,
                           }}>
@@ -607,13 +705,15 @@ export default function MyListingsScreen() {
 
                         <View style={{
                           backgroundColor: status.bg,
-                          paddingHorizontal: 12,
-                          paddingVertical: 6,
-                          borderRadius: 20,
+                          paddingHorizontal: 10,
+                          paddingVertical: 5,
+                          borderRadius: 16,
                           alignSelf: 'flex-start',
+                          minWidth: 70,
+                          alignItems: 'center',
                         }}>
                           <Text style={{
-                            fontSize: 12,
+                            fontSize: 11,
                             fontFamily: "Poppins_500Medium",
                             color: status.text,
                           }}>
@@ -626,20 +726,19 @@ export default function MyListingsScreen() {
                       <View
                         style={{
                           flexDirection: "row",
-                          gap: 16,
-                          marginBottom: 12,
+                          gap: 12,
+                          marginBottom: 8,
                           flexWrap: 'wrap',
                         }}
                       >
                         {profile?.bedrooms > 0 && (
-                          <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            <Bed size={16} color={theme.colors.primary} />
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                            <Bed size={14} color={theme.colors.primary} />
                             <Text
                               style={{
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontFamily: "Poppins_400Regular",
                                 color: theme.colors.text,
-                                marginLeft: 4,
                               }}
                             >
                               {profile.bedrooms} Beds
@@ -648,14 +747,13 @@ export default function MyListingsScreen() {
                         )}
 
                         {profile?.bathrooms > 0 && (
-                          <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            <Bath size={16} color={theme.colors.primary} />
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                            <Bath size={14} color={theme.colors.primary} />
                             <Text
                               style={{
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontFamily: "Poppins_400Regular",
                                 color: theme.colors.text,
-                                marginLeft: 4,
                               }}
                             >
                               {profile.bathrooms} Baths
@@ -664,33 +762,16 @@ export default function MyListingsScreen() {
                         )}
 
                         {(profile?.carpetArea || profile?.plotArea) && (
-                          <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            <Maximize size={16} color={theme.colors.primary} />
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                            <Maximize size={14} color={theme.colors.primary} />
                             <Text
                               style={{
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontFamily: "Poppins_400Regular",
                                 color: theme.colors.text,
-                                marginLeft: 4,
                               }}
                             >
                               {(profile.carpetArea || profile.plotArea)} {profile.areaUnit || "sqft"}
-                            </Text>
-                          </View>
-                        )}
-
-                        {listing?.viewCount > 0 && (
-                          <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            <Eye size={16} color={theme.colors.info} />
-                            <Text
-                              style={{
-                                fontSize: 13,
-                                fontFamily: "Poppins_400Regular",
-                                color: theme.colors.text,
-                                marginLeft: 4,
-                              }}
-                            >
-                              {listing.viewCount} views
                             </Text>
                           </View>
                         )}
@@ -713,17 +794,17 @@ export default function MyListingsScreen() {
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "center",
-                        paddingVertical: 12,
-                        gap: 6,
+                        paddingVertical: 10,
+                        gap: 4,
                         borderRightWidth: 1,
                         borderRightColor: theme.colors.border,
                       }}
                       activeOpacity={0.7}
                     >
-                      <Edit size={16} color={theme.colors.info} strokeWidth={1.5} />
+                      <Edit size={14} color={theme.colors.info} strokeWidth={1.5} />
                       <Text
                         style={{
-                          fontSize: 13,
+                          fontSize: 12,
                           fontFamily: "Poppins_500Medium",
                           color: theme.colors.info,
                         }}
@@ -739,59 +820,26 @@ export default function MyListingsScreen() {
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "center",
-                        paddingVertical: 12,
-                        gap: 6,
+                        paddingVertical: 10,
+                        gap: 4,
                         borderRightWidth: 1,
                         borderRightColor: theme.colors.border,
                       }}
                       activeOpacity={0.7}
                     >
                       <Trash2
-                        size={16}
+                        size={14}
                         color={theme.colors.error}
                         strokeWidth={1.5}
                       />
                       <Text
                         style={{
-                          fontSize: 13,
+                          fontSize: 12,
                           fontFamily: "Poppins_500Medium",
                           color: theme.colors.error,
                         }}
                       >
                         Delete
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => router.push({
-                        pathname: "/property-details",
-                        params: { id: listing.id }
-                      })}
-                      style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: 12,
-                        gap: 6,
-                        borderRightWidth: 1,
-                        borderRightColor: theme.colors.border,
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Eye
-                        size={16}
-                        color={theme.colors.text}
-                        strokeWidth={1.5}
-                      />
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          fontFamily: "Poppins_500Medium",
-                          color: theme.colors.text,
-                        }}
-                      >
-                        View Details
                       </Text>
                     </TouchableOpacity>
 
@@ -803,24 +851,24 @@ export default function MyListingsScreen() {
                           flexDirection: "row",
                           alignItems: "center",
                           justifyContent: "center",
-                          paddingVertical: 12,
-                          gap: 6,
+                          paddingVertical: 10,
+                          gap: 4,
                         }}
                         activeOpacity={0.7}
                       >
                         <Tag
-                          size={16}
+                          size={14}
                           color="#DC2626"
                           strokeWidth={1.5}
                         />
                         <Text
                           style={{
-                            fontSize: 13,
+                            fontSize: 12,
                             fontFamily: "Poppins_500Medium",
                             color: "#DC2626",
                           }}
                         >
-                          Mark as Sold
+                          Mark Sold
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -842,7 +890,7 @@ export default function MyListingsScreen() {
             <Search size={64} color={theme.colors.textSecondary} />
             <Text
               style={{
-                fontSize: 20,
+                fontSize: 18,
                 fontFamily: "Poppins_600SemiBold",
                 color: theme.colors.text,
                 textAlign: "center",
@@ -863,6 +911,26 @@ export default function MyListingsScreen() {
             >
               Try adjusting your search or filters
             </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setSearchQuery("");
+                setFilterStatus("all");
+              }}
+              style={{
+                backgroundColor: theme.colors.primary,
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{
+                fontSize: 14,
+                fontFamily: "Poppins_600SemiBold",
+                color: "#FFFFFF",
+              }}>
+                Clear Filters
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>

@@ -1,5 +1,5 @@
 // components/PostProperty/BottomNavigation.js
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 
 export function BottomNavigation({
@@ -9,6 +9,7 @@ export function BottomNavigation({
   handleBack,
   handleNext,
   handleSubmit,
+  isSubmitting = false,
 }) {
   return (
     <View
@@ -27,7 +28,7 @@ export function BottomNavigation({
       }}
     >
       <View style={{ flexDirection: "row", gap: 12 }}>
-        {currentStep > 1 && (
+        {currentStep > 1 && !isSubmitting && (
           <TouchableOpacity
             onPress={handleBack}
             style={{
@@ -43,6 +44,7 @@ export function BottomNavigation({
               gap: 6,
             }}
             activeOpacity={0.7}
+            disabled={isSubmitting}
           >
             <ChevronLeft
               size={20}
@@ -64,8 +66,8 @@ export function BottomNavigation({
         <TouchableOpacity
           onPress={currentStep === 5 ? handleSubmit : handleNext}
           style={{
-            flex: currentStep > 1 ? 2 : 1,
-            backgroundColor: theme.colors.primary,
+            flex: currentStep > 1 && !isSubmitting ? 2 : 1,
+            backgroundColor: isSubmitting ? theme.colors.primary + "80" : theme.colors.primary,
             borderRadius: 12,
             paddingVertical: 16,
             flexDirection: "row",
@@ -74,18 +76,36 @@ export function BottomNavigation({
             gap: 6,
           }}
           activeOpacity={0.8}
+          disabled={isSubmitting}
         >
-          <Text
-            style={{
-              fontSize: 16,
-              fontFamily: "Poppins_600SemiBold",
-              color: "#FFFFFF",
-            }}
-          >
-            {currentStep === 5 ? "Submit Property" : "Next"}
-          </Text>
-          {currentStep < 5 && (
-            <ChevronRight size={20} color="#FFFFFF" strokeWidth={1.5} />
+          {isSubmitting ? (
+            <>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontFamily: "Poppins_600SemiBold",
+                  color: "#FFFFFF",
+                }}
+              >
+                Submitting...
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontFamily: "Poppins_600SemiBold",
+                  color: "#FFFFFF",
+                }}
+              >
+                {currentStep === 5 ? "Submit Property" : "Next"}
+              </Text>
+              {currentStep < 5 && (
+                <ChevronRight size={20} color="#FFFFFF" strokeWidth={1.5} />
+              )}
+            </>
           )}
         </TouchableOpacity>
       </View>

@@ -1,7 +1,9 @@
 // app/(screens)/post-property.js
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useState, useEffect } from "react";
+import { useRouter } from "expo-router"; // Add router import
 import {
   useFonts,
   Poppins_600SemiBold,
@@ -30,6 +32,10 @@ const steps = [
 export default function PostPropertyScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const router = useRouter(); // Initialize router
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [autoNavigateTimer, setAutoNavigateTimer] = useState(null);
 
   const {
     currentStep,
@@ -78,7 +84,7 @@ export default function PostPropertyScreen() {
     setPhotos,
     videos,
     setVideos,
-    
+
     // Step 4
     plotArea,
     setPlotArea,
@@ -196,7 +202,7 @@ export default function PostPropertyScreen() {
     // Handlers
     handleNext,
     handleBack,
-    handleSubmit,
+    handleSubmit: originalHandleSubmit,
   } = usePostPropertyForm();
 
   const [loaded, error] = useFonts({
@@ -205,6 +211,100 @@ export default function PostPropertyScreen() {
     Poppins_400Regular,
     Poppins_700Bold,
   });
+
+  // Cleanup timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (autoNavigateTimer) {
+        clearTimeout(autoNavigateTimer);
+      }
+    };
+  }, [autoNavigateTimer]);
+
+  // Function to navigate home
+  const navigateToHome = () => {
+    // Clear any existing timer
+    if (autoNavigateTimer) {
+      clearTimeout(autoNavigateTimer);
+    }
+
+    // OPTION 1: Navigate to tabs home (most common)
+    router.replace("/(tabs)");
+
+    // OPTION 2: Navigate to specific home tab
+    // router.replace("/(tabs)/home");
+
+    // OPTION 3: Navigate back (if you came from home)
+    // router.back();
+
+    // OPTION 4: Navigate to listings tab
+    // router.replace("/(tabs)/my-listings");
+  };
+
+  // Wrap the original handleSubmit with loading and success/error handling
+  const handleSubmitWithLoading = async () => {
+    setIsSubmitting(true);
+
+    try {
+      // Call the original submit function from hook
+      await originalHandleSubmit();
+
+      // If successful
+      setIsSuccess(true);
+
+      // Show success alert
+      Alert.alert(
+        "Success!",
+        "Property submitted successfully. You will be redirected to home in 3 seconds.",
+        [
+          {
+            text: "Go to Home Now",
+            onPress: () => {
+              navigateToHome();
+            }
+          }
+        ]
+      );
+
+      // Auto navigate after 3 seconds
+      const timer = setTimeout(() => {
+        navigateToHome();
+      }, 3000);
+
+      setAutoNavigateTimer(timer);
+
+    } catch (error) {
+      // Show error alert
+      let errorMessage = error.message || "Failed to submit property. Please try again.";
+
+      // Handle specific API errors
+      if (errorMessage.includes("Post limit exceeded")) {
+        errorMessage = "You've reached the maximum limit of 2 properties. Please upgrade your plan to add more properties.";
+      }
+
+      Alert.alert(
+        "Submission Failed",
+        errorMessage,
+        [
+          {
+            text: "Try Again",
+            onPress: () => {
+              // User can try again
+            }
+          },
+          {
+            text: "Cancel",
+            style: "cancel"
+          }
+        ]
+      );
+
+      console.error("Property submission error:", error);
+
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!loaded && !error) {
     return (
@@ -218,6 +318,84 @@ export default function PostPropertyScreen() {
     const step = steps[currentStep - 1];
     return step ? step.title : "";
   };
+
+  // Show success screen if submission was successful
+  if (isSuccess) {
+    return (
+      <View style={{
+        flex: 1,
+        backgroundColor: theme.colors.background,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 20
+      }}>
+        <StatusBar style={theme.statusBarStyle} />
+        <View style={{
+          backgroundColor: "#D4EDDA",
+          padding: 30,
+          borderRadius: 16,
+          alignItems: "center",
+          borderWidth: 1,
+          borderColor: "#C3E6CB"
+        }}>
+          <Text style={{
+            fontSize: 24,
+            fontFamily: "Poppins_600SemiBold",
+            color: "#155724",
+            marginBottom: 16
+          }}>
+            ✅ Success!
+          </Text>
+          <Text style={{
+            fontSize: 16,
+            fontFamily: "Poppins_400Regular",
+            color: "#155724",
+            textAlign: "center",
+            marginBottom: 8
+          }}>
+            Your property has been submitted successfully.
+          </Text>
+          <Text style={{
+            fontSize: 14,
+            fontFamily: "Poppins_400Regular",
+            color: "#155724",
+            textAlign: "center"
+          }}>
+            It will be reviewed and published shortly.
+          </Text>
+
+          <TouchableOpacity
+            onPress={navigateToHome}
+            style={{
+              marginTop: 24,
+              backgroundColor: theme.colors.primary,
+              borderRadius: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 24,
+            }}
+          >
+            <Text style={{
+              fontSize: 16,
+              fontFamily: "Poppins_600SemiBold",
+              color: "#FFFFFF",
+            }}>
+              Go to Home
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={{
+            marginTop: 12,
+            fontSize: 12,
+            fontFamily: "Poppins_400Regular",
+            color: "#155724",
+            textAlign: "center"
+          }}>
+            Redirecting automatically in 3 seconds...
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -473,7 +651,8 @@ export default function PostPropertyScreen() {
         currentStep={currentStep}
         handleBack={handleBack}
         handleNext={handleNext}
-        handleSubmit={handleSubmit}
+        handleSubmit={handleSubmitWithLoading}
+        isSubmitting={isSubmitting}
       />
     </View>
   );
