@@ -1,0 +1,619 @@
+{
+    "Inquiries": 2,
+    "address": {
+        "apartmentDoorNo": "PRASANTHI ONE",
+        "city": "Visakhapatnam",
+        "createdAt": "2025-12-17T12:00:25.000Z",
+        "fullAddress": null,
+        "id": "f63afa51-7af0-4771-a70e-a9a9ce347ac6",
+        "lat": "17°52'25.4",
+        "locality": "Anandapuram",
+        "lon": "83°22'16.7",
+        "name": null,
+        "near_by": [
+            [Object
+            ],
+            [Object
+            ],
+            [Object
+            ],
+            [Object
+            ]
+        ],
+        "pincode": "",
+        "propertyId": "a3096c20-2391-4ea9-843e-0a295abbbda4",
+        "road_facing": "200",
+        "subLocality": "",
+        "updatedAt": "2025-12-17T12:54:23.000Z"
+    },
+    "addressId": "f63afa51-7af0-4771-a70e-a9a9ce347ac6",
+    "advance": null,
+    "ageOfProperty": "1",
+    "amenities": [
+        "Security",
+        "Gym / Rooms",
+        "Wi-Fi",
+        "Power Backup",
+        "Lift",
+        "Park / Garden",
+        "Maintenance Staff"
+    ],
+    "approvedBy": "RERA",
+    "audio": null,
+    "availableStatus": "Ready to Move",
+    "category": {
+        "catType": "Residential",
+        "createdAt": "2025-10-30T10:08:30.000Z",
+        "description": "Flat/Apartment listings",
+        "id": "11061d6b-953c-4962-8fc4-393ee269a01a",
+        "name": "Flat/Apartment",
+        "photo": "https://backendservice.vmrdaplots.in/uploads/category/flats.png",
+        "slug": "Flat/Apartment",
+        "status": "active",
+        "updatedAt": "2025-10-30T10:08:30.000Z"
+    },
+    "categoryId": "11061d6b-953c-4962-8fc4-393ee269a01a",
+    "client": null,
+    "clientId": null,
+    "createdAt": "2025-12-17T12:00:25.000Z",
+    "description": "Highway-Facing 2 & 3 BHK Flats in Boyapalem, Visakhapatnam
+
+Location: Boyapalem, Visakhapatnam, Andhra Pradesh  Apartments near IIM Vizag
+Project Area: 1 Acre
+Apartment Size: 1064 sq. ft.
+Project Size: 1 Building with 50 Units
+Launch Date: January 2024
+Possession Starts: November 2025
+Price Range: ?43 Lakhs to ?57 Lakhs (Approximate)
+Configurations: 2 & 3 BHK Apartments
+Facing: East- and West-Facing Flats
+Key Amenities
+
+    Closed Car Parking
+
+    24x7 Water Supply
+
+    Solid Waste Management & Disposal
+
+    StormwaterDrains
+
+    Internal Roads & Footpaths
+
+    Energy Management & Solar Energy
+
+    Sewage Treatment Plant
+
+    Firefighting System
+
+    Electrification (Transformer & Solar Energy)
+
+    Security with Fire Alarm & Personnel
+
+    Intercom Facility
+
+    Lift(s)
+
+    Water Purifier
+
+    Maintenance Staff
+
+    False Ceiling Lighting
+
+    Water Storage
+
+    Park & Visitor Parking
+
+    RainwaterHarvesting
+
+    Water Softening Plant
+
+Location Highlights
+
+    Highway-Facing Apartments
+
+    50 metres from Paida College, Vizag
+
+    Very Near Proposed Kommadi Metro Station
+
+    Close to IIM Vizag, engineering and medical colleges, and schools
+
+    Near 100 ft Beach Road
+
+    Proximity to Bhogapuram International Airport
+
+    Pollution-Free Zone
+
+    200 metres from the bus stop
+
+    Pleasant and Peaceful Gated Community Surrounded by Greenery
+
+Why Invest Here?
+
+This premium gated community offers modern 2 & 3 BHK apartments with excellent amenities and connectivity. Located near educational institutions, metro connectivity, and the beach road, it promises a pollution-free and comfortable living environment. With possession starting in late 2025 and limited units available, this is an excellent opportunity for homebuyers and investors.
+
+    Highway-facing flats in Boyapalem, Visakhapatnam
+
+    2 BHK and 3 BHK flats near Paida College, Vizag
+
+    Flats near Kommadi metro station, Vizag
+
+    Apartments near IIM Vizag
+
+    Residential flats near Bhogapuram Airport
+
+    Gated community flats in Boyapalem
+
+    Flats near 100 ft Beach Road, Vizag
+
+    New apartment projects in Visakhapatnam
+
+    Flats with modern amenities Vizag
+
+    Affordable flats in Boyapalem, Visakhapatnam
+
+
+Features
+
+Bank Loan Approval
+
+", "id": "a3096c20-2391-4ea9-843e-0a295abbbda4", "isActive": true, "isHandOver": true, "isProject": false, "isSold": false, "marketType": "Sale", "photos": "[\"http://vizaglandservices.esotericprojects.tech/uploads/images/3c0152ec-b558-4437-ab7a-723868181da5.webp\",\"http://vizaglandservices.esotericprojects.tech/uploads/images/72b83db3-f2fe-4ab7-bd00-151571cac05f.webp\"]",
+        "possession": null,
+        "price": "4500000.00",
+        "profile": {
+            "UDS_area": null,
+            "acAvailable": false,
+            "areaUnit": "sqft",
+            "balconies": 1,
+            "bathrooms": 2,
+            "bedrooms": 2,
+            "breath": "0.00",
+            "buildArea": null,
+            "cabins": 0,
+            "carpetArea": "1000.00",
+            "closedParking": 1,
+            "conferenceRooms": 0,
+            "cornerShop": false,
+            "createdAt": "2025-12-17T12:00:25.000Z",
+            "facing": "East",
+            "floorNumber": "",
+            "frontage": "",
+            "furnishedStatus": "furnished",
+            "id": "ad6075f8-edc9-4fe2-8572-dfcff13ade5f",
+            "landArea": "0.00",
+            "length": "0.00",
+            "liftAvailable": false,
+            "officeNumber": "",
+            "openParking": 1,
+            "pantryAvailable": false,
+            "parkingSpaces": null,
+            "parkingType": "",
+            "plotArea": "0.00",
+            "plotAvailable": 0,
+            "plotSize": null,
+            "poojaRooms": false,
+            "powerBackup": false,
+            "roadFacing": "0.00",
+            "roadWidth": "",
+            "securityAvailable": false,
+            "shopNumber": "",
+            "superBuildArea": null,
+            "totalFloors": "6",
+            "type": "",
+            "units": 25,
+            "updatedAt": "2025-12-17T12:54:23.000Z",
+            "washroomAvailable": false,
+            "waterSupply": "24x7",
+            "workstations": 0
+        },
+        "propertyName": "Flats in Boyapalem, Visakhapatnam",
+        "propertyProfileId": "ad6075f8-edc9-4fe2-8572-dfcff13ade5f",
+        "renewalDate": "2026-02-15T12:00:25.000Z",
+        "status": "verified",
+        "thisMonthCount": 22,
+        "title": "Flats in Boyapalem, Visakhapatnam",
+        "updatedAt": "2026-01-21T11:34:23.000Z",
+        "videos": null,
+        "viewCount": 22,
+        "youtubeUrl": ""
+    },
+    {
+        "Inquiries": 0,
+        "address": {
+            "apartmentDoorNo": "",
+            "city": "Visakhapatnam",
+            "createdAt": "2025-12-22T07:16:11.000Z",
+            "fullAddress": null,
+            "id": "43df7756-d62d-4ee8-b316-2cb5b5077283",
+            "lat": "",
+            "locality": "Madhurawada",
+            "lon": "",
+            "name": null,
+            "near_by": [
+                [Object
+                ],
+                [Object
+                ]
+            ],
+            "pincode": "",
+            "propertyId": "fa9d0330-5bbf-4231-b806-a30c9354b286",
+            "road_facing": "100",
+            "subLocality": "",
+            "updatedAt": "2025-12-23T06:50:46.000Z"
+        },
+        "addressId": "43df7756-d62d-4ee8-b316-2cb5b5077283",
+        "advance": null,
+        "ageOfProperty": "",
+        "amenities": [
+            "Security",
+            "Park / Garden",
+            "Maintenance Staff"
+        ],
+        "approvedBy": "VMRDA,RERA,Bank Loan",
+        "audio": null,
+        "availableStatus": "Ready to Move",
+        "category": {
+            "catType": "Residential",
+            "createdAt": "2025-10-30T10:57:16.000Z",
+            "description": "Plot listings",
+            "id": "215adf4e-1fae-4ed3-8e73-d05c47cff03b",
+            "name": "Plot",
+            "photo": "https://backendservice.vmrdaplots.in/uploads/category/plots.png",
+            "slug": "plot",
+            "status": "active",
+            "updatedAt": "2025-10-30T10:57:16.000Z"
+        },
+        "categoryId": "215adf4e-1fae-4ed3-8e73-d05c47cff03b",
+        "client": null,
+        "clientId": null,
+        "createdAt": "2025-12-22T07:16:11.000Z",
+        "description": "VMRDA-APPROVED PLOTS IN MADHURAWADA, RESIDENTIAL PLOTS AT IT SEZ (MADHURAWADA)
+VMRDA/LP Approved Residential Plot – Prime North-Facing
+
+     PLOT DETAILS
+
+     Layout Approval: VUDA / VMRDA     
+     L.P. No.: 30/2003     
+     Village: Madhurawada
+
+     Plot Size: 267 sq. Yards     
+     Dimensions: 40 ft × 60 ft     
+     Facing: North-Facing      
+     Approval: VMRDA / LP Approved     
+     Ideal For: Independent house/villa construction     
+     Mandals & Limits:     
+    ?• Visakhapatnam (Rural) Mandal     
+    ?• Greater Visakhapatnam Municipal Corporation (GVMC)
+    LOCATION – MADHURAWADA, VISAKHAPATNAM
+    Located in a high-demand IT corridor, very close to Cognizant and major IT hubs, making it ideal for both self-construction and investment.
+
+     Cognizant IT SEZ: 3 km     
+     Madhurawada IT Hills: 2 km     
+     TCS / Tech Park / Millennium Towers: 4 km     
+     Car Shed Bus Stop: 3 km     
+     Madhurawada Sub-Registrar Office: 2 km
+
+     Kommadi Junction: ~3 km     
+     Yendada: ~5 km     
+     Anandapuram: ~8 km     
+     IT Corridor (NH-16 side): ~3 km 
+     VUDA/VMRDA-approved layout     
+     Clear title & ready for registration     
+     Excellent rental & resale potential     
+     Ideal for IT professionals
+     Ready-to-construct residential plot     
+     Prime North-facing location     
+     Excellent appreciation potential     
+     Peaceful residential surroundings     
+     Easy access to NH-16, Beach Road & city hubs     
+     Ideal for IT professionals & investors
+    VMRDA-approved plots in Madhurawada","id": "fa9d0330-5bbf-4231-b806-a30c9354b286","isActive": true,"isHandOver": false,"isProject": false,"isSold": false,
+        "marketType": "Sale",
+        "photos": "[\"http://vizaglandservices.esotericprojects.tech/uploads/images/5cb04ef0-164c-43a0-ab98-6af88aee3782.webp\",\"http://vizaglandservices.esotericprojects.tech/uploads/images/741acc1b-c240-41db-968b-7a80b0ca1738.webp\",\"http://vizaglandservices.esotericprojects.tech/uploads/images/73664fec-0d71-4251-8c77-74626d7982c7.webp\",\"http://vizaglandservices.esotericprojects.tech/uploads/images/185befb4-c6fe-4bf8-912c-f8fb5148ff72.webp\"]",
+        "possession": null,
+        "price": "9900000.00",
+        "profile": {
+            "UDS_area": null,
+            "acAvailable": false,
+            "areaUnit": "sq yards",
+            "balconies": 0,
+            "bathrooms": 0,
+            "bedrooms": 0,
+            "breath": "0.00",
+            "buildArea": "0.00",
+            "cabins": 0,
+            "carpetArea": "0.00",
+            "closedParking": 0,
+            "conferenceRooms": 0,
+            "cornerShop": false,
+            "createdAt": "2025-12-22T07:16:11.000Z",
+            "facing": "East",
+            "floorNumber": "",
+            "frontage": "",
+            "furnishedStatus": "furnished",
+            "id": "1714f222-37d2-4db2-8005-ac699444389e",
+            "landArea": "1.00",
+            "length": "60.00",
+            "liftAvailable": false,
+            "officeNumber": "",
+            "openParking": 0,
+            "pantryAvailable": false,
+            "parkingSpaces": 0,
+            "parkingType": "",
+            "plotArea": "200.00",
+            "plotAvailable": 0,
+            "plotSize": null,
+            "poojaRooms": false,
+            "powerBackup": false,
+            "roadFacing": "0.00",
+            "roadWidth": "",
+            "securityAvailable": false,
+            "shopNumber": "",
+            "superBuildArea": "0.00",
+            "totalFloors": "",
+            "type": "",
+            "units": 0,
+            "updatedAt": "2025-12-23T06:50:46.000Z",
+            "washroomAvailable": false,
+            "waterSupply": "24x7",
+            "workstations": 0
+        },
+        "propertyName": "IT SEZ MADHURAWADA ",
+        "propertyProfileId": "1714f222-37d2-4db2-8005-ac699444389e",
+        "renewalDate": "2026-02-20T07:16:11.000Z",
+        "status": "verified",
+        "thisMonthCount": 1,
+        "title": "RESIDENTIAL PLOTS AT IT SEZ MADHURAWADA",
+        "updatedAt": "2026-01-09T12:45:30.000Z",
+        "videos": null,
+        "viewCount": 18,
+        "youtubeUrl": ""
+    }
+
+
+    {
+        "address": "Allipuram",
+        "area": "rrr",
+        "bio": "rrr",
+        "companyName": "ARK",
+        "createdAt": "2026-01-20T08:01:56.000Z",
+        "email": "ark@gmail.com",
+        "failed_otp_attempts": 0,
+        "fullName": "Ravi kumar",
+        "id": "0330b1a1-30c2-46b3-8bb4-c71b7e3e5c77",
+        "isVerified": false,
+        "kycProofName": null,
+        "kycProofNumber": "300270426179",
+        "kycUploadFile": null,
+        "last_otp_verified": "2026-01-21T14:27:32.000Z",
+        "otp": null,
+        "otp_expiry": null,
+        "phoneNumber": "9494130830",
+        "postLimit": 2,
+        "profilePic": "http://vizaglandservices.esotericprojects.tech/uploads/images/e6d0cce4-4ea9-43bb-a77b-536eff46f9eb.webp",
+        "role": "owner",
+        "status": "active",
+        "updatedAt": "2026-01-22T10:39:32.000Z",
+        "website": null
+    }
+
+    [
+        {
+            "isNew": true,
+            "name": "7ea21fd9-241e-486a-bc51-3b0520e01d50.jpeg",
+            "originalUri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0b4a255f-1d9f-4f28-9243-0fb1077b1a97.jpeg",
+            "type": "image/jpeg",
+            "uri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0b4a255f-1d9f-4f28-9243-0fb1077b1a97.jpeg"
+        },
+        {
+            "isNew": true,
+            "name": "4ee60ab4-c6ae-4c80-b7ee-0711b691d8e0.jpeg",
+            "originalUri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0516fb89-7965-44e9-9c84-2fbb15845442.jpeg",
+            "type": "image/jpeg",
+            "uri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0516fb89-7965-44e9-9c84-2fbb15845442.jpeg"
+        },
+        {
+            "isNew": true,
+            "name": "0af06093-6904-4acc-83ae-9d8a3014b4e7.jpeg",
+            "originalUri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/26deaf21-6e55-4d11-8e28-a3ecb8fed26f.jpeg",
+            "type": "image/jpeg",
+            "uri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/26deaf21-6e55-4d11-8e28-a3ecb8fed26f.jpeg"
+        }
+    ]
+
+    {
+        "acAvailable": false,
+        "advance": "",
+        "advantages": [
+            {
+                "distance": "250 m",
+                "info": "rrr"
+            }
+        ],
+        "ageOfProperty": "5",
+        "amenities": [
+            "Security",
+            "Maintenance Staff",
+            "Clubhouse",
+            "Park / Garden",
+            "Gym / Rooms",
+            "Swimming Pool",
+            "Wi-Fi",
+            "Lift",
+            "Power Backup"
+        ],
+        "apartmentDoorNo": "rrr",
+        "approvedBy": [
+            "VUDA",
+            "DTCP"
+        ],
+        "areaUnit": "sqft",
+        "balconies": "",
+        "bathrooms": 2,
+        "bedrooms": 2,
+        "breadth": "",
+        "builtArea": "100",
+        "cabins": "",
+        "carpetArea": "100",
+        "city": "Visakhapatnam",
+        "closedParking": 2,
+        "conferenceRooms": "",
+        "cornerShop": false,
+        "description": "rrrrdfvfbfggh",
+        "facing": "",
+        "flatNumber": "",
+        "frontage": "",
+        "furnishedStatus": "unfurnished",
+        "landArea": 0,
+        "lat": "17.33",
+        "length": "",
+        "liftAvailable": false,
+        "listingType": "Sale",
+        "loadingCategories": false,
+        "locality": "Bhogapuram",
+        "lon": "83.77",
+        "officeNumber": "",
+        "openParking": 1,
+        "pantryAvailable": false,
+        "parkingSpaces": "",
+        "parkingType": "",
+        "photos": [
+            {
+                "isNew": true,
+                "name": "7ea21fd9-241e-486a-bc51-3b0520e01d50.jpeg",
+                "originalUri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0b4a255f-1d9f-4f28-9243-0fb1077b1a97.jpeg",
+                "type": "image/jpeg",
+                "uri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0b4a255f-1d9f-4f28-9243-0fb1077b1a97.jpeg"
+            },
+            {
+                "isNew": true,
+                "name": "4ee60ab4-c6ae-4c80-b7ee-0711b691d8e0.jpeg",
+                "originalUri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0516fb89-7965-44e9-9c84-2fbb15845442.jpeg",
+                "type": "image/jpeg",
+                "uri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/0516fb89-7965-44e9-9c84-2fbb15845442.jpeg"
+            }
+        ],
+        "pincode": "",
+        "plotArea": 0,
+        "plotAreaUnit": "sq yards",
+        "poojaRoom": true,
+        "possession": "",
+        "powerBackup": false,
+        "price": "1000000",
+        "privateNotes": "fvgfbggn",
+        "propertyName": "rrrrrrrrrr",
+        "propertyOnFloor": "4",
+        "propertySubtype": "Flat/Apartment",
+        "propertyType": "residential",
+        "roadFacing": "100",
+        "roadWidth": 0,
+        "securityAvailable": false,
+        "selectedCategoryId": "11061d6b-953c-4962-8fc4-393ee269a01a",
+        "shopNumber": "",
+        "status": "Ready to Move",
+        "subLocality": "allipuram",
+        "superBuiltArea": "100",
+        "title": "rrrrr",
+        "totalFloors": "3",
+        "units": 0,
+        "videos": null,
+        "washroomAvailable": false,
+        "waterSupply": "",
+        "workstations": ""
+    }
+
+    {
+        "address": {
+            "apartmentDoorNo": "rrr",
+            "city": "Visakhapatnam",
+            "lat": "17.33",
+            "locality": "Yendada",
+            "lon": "83.77",
+            "near_by": [
+                [Object
+                ]
+            ],
+            "road_facing": "100",
+            "subLocality": "Alliouram"
+        },
+        "ageOfProperty": "",
+        "amenities": [
+            "Security",
+            "Clubhouse",
+            "Park / Garden",
+            "Swimming Pool",
+            "Lift",
+            "Power Backup"
+        ],
+        "approvedBy": [
+            "VMRDA",
+            "VUDA"
+        ],
+        "audio": null,
+        "availableStatus": "60",
+        "catType": "Residential",
+        "categoryId": "11061d6b-953c-4962-8fc4-393ee269a01a",
+        "description": "rrrrrrrrrrr",
+        "marketType": "Sale",
+        "photos": [
+            {
+                "isNew": true,
+                "name": "95e57062-1273-47a6-9a38-1c6618d88696.jpeg",
+                "originalUri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/97f5ab4d-61d4-4583-a80f-258057d80f2c.jpeg",
+                "type": "image/jpeg",
+                "uri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/97f5ab4d-61d4-4583-a80f-258057d80f2c.jpeg"
+            },
+            {
+                "isNew": true,
+                "name": "3259da5c-ae01-475b-98fd-e86923e7255a.jpeg",
+                "originalUri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/d05bc433-e84b-4776-9c80-76732c6ff33a.jpeg",
+                "type": "image/jpeg",
+                "uri": "file:///data/user/0/xyz.create.CreateExpoEnvironment/cache/ImagePicker/d05bc433-e84b-4776-9c80-76732c6ff33a.jpeg"
+            }
+        ],
+        "price": "10000000",
+        "propertyKind": "residential",
+        "propertyName": "rrrrrrrrrrr",
+        "propertyProfile": {
+            "acAvailable": false,
+            "areaUnit": "sqyd",
+            "balconies": "",
+            "bathrooms": 2,
+            "bedrooms": 2,
+            "breath": "",
+            "buildArea": "100",
+            "cabins": "",
+            "carpetArea": "100",
+            "closedParking": 2,
+            "conferenceRooms": "",
+            "cornerShop": false,
+            "facing": "",
+            "floorNumber": "3",
+            "frontage": "",
+            "furnishedStatus": "unfurnished",
+            "landArea": 0,
+            "length": "",
+            "liftAvailable": false,
+            "officeNumber": "",
+            "openParking": 2,
+            "pantryAvailable": false,
+            "parkingSpaces": "",
+            "parkingType": "",
+            "plotArea": 0,
+            "poojaRooms": true,
+            "powerBackup": false,
+            "roadFacing": "100",
+            "roadWidth": 0,
+            "securityAvailable": false,
+            "shopNumber": "",
+            "totalFloors": "3",
+            "type": "Flat/Apartment",
+            "units": 0,
+            "washroomAvailable": false,
+            "waterSupply": "",
+            "workstations": ""
+        },
+        "propertySubtype": "Flat/Apartment",
+        "title": "rrrrr",
+        "videos": null,
+        "youtubeUrl": ""
+    }
