@@ -184,6 +184,8 @@ export default function HomeScreen() {
           backgroundColor: theme.colors.background,
         }}
       >
+        <View style={{flexDirection:'row',justifyContent:'space-between'}}>
+
         <Text
           style={{
             fontSize: 28,
@@ -194,6 +196,31 @@ export default function HomeScreen() {
         >
           Find Your Property
         </Text>
+        <TouchableOpacity
+          onPress={() => router.push("/blog")}
+          style={{
+            paddingVertical: 5,
+            alignItems: "center",
+            borderRadius: 8,
+            backgroundColor:  theme.colors.primary,
+            borderWidth: 1,width:80,height:40,
+            borderColor: theme.colors.primary,
+            marginLeft: 8,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: "Poppins_500Medium",
+              color:  "#FFFFFF",
+              padding:5
+            }}
+          >
+            Blogs
+          </Text>
+        </TouchableOpacity>
+
+        </View>
 
         {/* Search Bar */}
         <View

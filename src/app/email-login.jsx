@@ -50,7 +50,6 @@ export default function EmailLoginScreen() {
         Alert.alert("Login Failed", response?.message || "Invalid credentials");
         return;
       }
-      console.log("rrr:::", response);
       // ✅ Save JWT + client
       await saveAuth(response.token, response.client);
 
