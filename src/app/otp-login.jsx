@@ -20,6 +20,7 @@ import { useState } from "react";
 import { useTheme } from "../utils/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ApiService from "../components/ApiService";
+import { sendSMS } from "../components/sendSMS";
 
 export default function OTPLoginScreen() {
   const insets = useSafeAreaInsets();
@@ -38,49 +39,49 @@ export default function OTPLoginScreen() {
       Alert.alert("Invalid Phone", "Please enter a valid 10 digit phone number");
       return;
     }
-  
+
     try {
       setLoading(true);
-      const response = await ApiService.post( '/auth/login/phone', { phone: phone},
+      const response = await ApiService.post('/auth/login/phone', { phone: phone },
         {
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
-  
+
       if (!response.success) {
         Alert.alert("Error", data.message || "Failed to send OTP");
         setLoading(false);
         return;
       }
-  
+
       // Store required data
+      await sendSMS(response.phone, response.otp)
       await AsyncStorage.setItem("phone", response.phone);
       await AsyncStorage.setItem("isNewUser", JSON.stringify(response.isNewUser));
       await AsyncStorage.setItem("otp_expires_at", response.expires_at);
-  
+
       // ⚠️ OTP should NOT be stored in production (only for testing)
       await AsyncStorage.setItem("otp_debug", response.otp);
-  
       setLoading(false);
-  
+console.log("rrr::",)
       // Navigate to OTP verify screen
       router.push({
         pathname: "/otp-verify",
         params: {
           phone: response.phone,
-          otps:response.otp,
+          otps: response.otp,
           isNewUser: String(response.isNewUser),
         },
       });
-          } catch (error) {
+    } catch (error) {
       setLoading(false);
       Alert.alert("Network Error", "Please try again later");
-      console.error("OTP API Error:", error);
+      console.error("OTP API Error:", error.message);
     }
   };
-  
+
   if (!loaded && !error) {
     return null;
   }

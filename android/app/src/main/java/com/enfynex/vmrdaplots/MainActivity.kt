@@ -1,4 +1,4 @@
-package xyz.create.CreateExpoEnvironment
+package com.enfynex.vmrdaplots
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

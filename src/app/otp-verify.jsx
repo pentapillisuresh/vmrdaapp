@@ -27,13 +27,13 @@ export default function OTPVerifyScreen() {
   });
 
   /* ---------------- AUTO FILL OTP FROM PATH ---------------- */
-  useEffect(() => {
-    console.log("OTP:::",otpParam)
-    if (otpParam && otpParam.length === 6) {
-      setOtp(otpParam.split(""));
-      setTimeout(() => inputRefs.current[5]?.focus(), 100);
-    }
-  }, [otpParam]);
+  // useEffect(() => {
+  //   console.log("OTP:::",otpParam)
+  //   if (otpParam && otpParam.length === 6) {
+  //     setOtp(otpParam.split(""));
+  //     setTimeout(() => inputRefs.current[5]?.focus(), 100);
+  //   }
+  // }, [otpParam]);
 
   /* ---------------- OTP INPUT HANDLERS ---------------- */
   const handleOtpChange = (value, index) => {
