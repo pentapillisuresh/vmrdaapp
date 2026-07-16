@@ -77,8 +77,6 @@ export default function MyListingsScreen() {
         }
       });
 
-      console.log("API Response:", response); // Debug log
-
       // Handle different response structures
       let properties = [];
 
@@ -101,7 +99,6 @@ export default function MyListingsScreen() {
         property.clientId === user.id || property.createdBy === user.id
       );
 
-      console.log("User properties:", userProperties); // Debug log
       setListings(userProperties);
       filterListings(userProperties, searchQuery, filterStatus);
     } catch (error) {
@@ -297,8 +294,6 @@ export default function MyListingsScreen() {
     } catch (error) {
       console.error("Error parsing photos:", error);
     }
-
-    console.log("Returning placeholder image");
     return "https://via.placeholder.com/400x300?text=No+Image";
   };
   
@@ -629,7 +624,6 @@ export default function MyListingsScreen() {
               const status = getStatusColor(listing);
               const profile = listing?.propertyProfile || listing?.profile || {};
               const address = listing?.address || {};
-              console.log("rrr:::",listing)
               return (
                 <View
                   key={listing.id || listing._id}

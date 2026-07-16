@@ -100,7 +100,6 @@ export default function RecentlyViewedScreen() {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("rrr::", response)
       if (response) {
         const propertyList = response.map((item) => item.property) || [];
         setRecentProperties(propertyList);

@@ -34,7 +34,6 @@ const uploadWithProgress = async (url, formData, type, setProgress, token) => {
         setProgress((prev) => ({ ...prev, [type]: percent }));
       },
     });
-    console.log("rrr::",res)
     return res.data;
   } catch (err) {
     console.error(`❌ ${type} upload failed`, err);

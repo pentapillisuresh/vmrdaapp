@@ -120,7 +120,6 @@ export default function PropertyDetailsScreen() {
           Authorization: `Bearer ${clientToken}`,
         },
       });
-      console.log('View count updated');
     } catch (err) {
       console.error('Error updating view count:', err);
     }
@@ -220,7 +219,6 @@ export default function PropertyDetailsScreen() {
 
     try {
       const response = await ApiService.post("/leads", payload);
-      console.log("rrr::",response);
       if (response) {
         setFormStatus("Thank you! Our team will contact you soon.");
         setFormData({
@@ -244,21 +242,16 @@ export default function PropertyDetailsScreen() {
   // Get gallery images
   const getGalleryImages = () => {
     if (!property) return [];
-    
-    console.log("Getting gallery images for property:", property?.title);
-    console.log("Photos data:", property?.photos);
-    
+      
     try {
       let photos = property?.photos;
       
       // If photos is a string, try to parse it as JSON
       if (typeof photos === 'string') {
-        console.log("Photos is a string, attempting to parse JSON");
         // Clean the string if needed
         photos = photos.trim();
         if (photos.startsWith('[') && photos.endsWith(']')) {
           const parsed = JSON.parse(photos);
-          console.log("Parsed photos array:", parsed);
           return Array.isArray(parsed) ? parsed : [parsed];
         } else {
           // If it's not a JSON array but still a string, treat it as a single image URL
@@ -283,8 +276,6 @@ export default function PropertyDetailsScreen() {
       console.error('Error parsing photos:', err);
       console.error('Photos string that caused error:', property?.photos);
     }
-    
-    console.log("Returning empty array for photos");
     return [];
   };
 
@@ -935,7 +926,6 @@ const SimilarPropertyCard = ({ property, onPress }) => {
   
   const getPhotoSrc = (photos) => {
     const fallback = "https://via.placeholder.com/400x300?text=No+Image";
-    console.log("rrr::", photos);
   
     if (!photos) return fallback;
   

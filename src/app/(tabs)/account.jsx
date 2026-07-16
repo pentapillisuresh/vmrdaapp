@@ -53,8 +53,6 @@ export default function AccountScreen() {
         }
       );
 
-      console.log("API RESPONSE::", response);
-
       if (response?.client) {
         const client = response.client;
 

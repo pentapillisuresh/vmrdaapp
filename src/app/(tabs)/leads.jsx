@@ -62,9 +62,7 @@ export default function LeadsScreen() {
 
       const result = response.data;
       
-      if (result) {
-        console.log('Fetched Leads Data:', result);
-        
+      if (result) {        
         setLeads(result?.leads || []);
         setFilteredLeads(result?.leads || []);
         

@@ -21,7 +21,6 @@ export default function SplashScreen() {
   });
 
   const bootstrap = async () => {
-    console.log("eee:::")
     const {token} = await getAuth();
     console.log("rrr:::",token)
     if (token) {

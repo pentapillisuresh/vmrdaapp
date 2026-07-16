@@ -126,7 +126,6 @@ export default function AccountScreen() {
           "Content-Type": "multipart/form-data",
         },
       });
-console.log("eee:::",response.url)
       return response.imageUrl || response.url;
     } catch (error) {
       console.error("Image upload failed:", error);

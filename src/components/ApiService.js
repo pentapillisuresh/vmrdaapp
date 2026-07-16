@@ -12,7 +12,7 @@ export const initialAuthState = {
 const ApiService = (() => {
 
   // const baseURL = 'http://10.144.218.71:3001/'; // Or use a global variable or config import
-  const baseURL = 'https://vizaglandservices.esotericprojects.tech/api/'; // Or use a global variable or config import
+  const baseURL = 'https://service.vmrdaplots.com/api/'; // Or use a global variable or config import
 
 const axiosInstance = axios.create({
   baseURL,

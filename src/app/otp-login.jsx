@@ -1,19 +1,7 @@
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  useFonts,
-  Poppins_600SemiBold,
-  Poppins_400Regular,
-  Poppins_500Medium,
-} from "@expo-google-fonts/poppins";
+import { useFonts, Poppins_600SemiBold, Poppins_400Regular, Poppins_500Medium } from "@expo-google-fonts/poppins";
 import { ArrowLeft, Smartphone } from "lucide-react-native";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -57,7 +45,7 @@ export default function OTPLoginScreen() {
       }
 
       // Store required data
-      await sendSMS(response.phone, response.otp)
+      // await sendSMS(response.phone, response.otp)
       await AsyncStorage.setItem("phone", response.phone);
       await AsyncStorage.setItem("isNewUser", JSON.stringify(response.isNewUser));
       await AsyncStorage.setItem("otp_expires_at", response.expires_at);
@@ -65,7 +53,6 @@ export default function OTPLoginScreen() {
       // ⚠️ OTP should NOT be stored in production (only for testing)
       await AsyncStorage.setItem("otp_debug", response.otp);
       setLoading(false);
-console.log("rrr::",)
       // Navigate to OTP verify screen
       router.push({
         pathname: "/otp-verify",
