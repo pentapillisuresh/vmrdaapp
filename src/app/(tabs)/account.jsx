@@ -77,7 +77,7 @@ export default function AccountScreen() {
         await saveAuth(token, client);
         setProfileData(mappedProfile);
         setOriginalData(mappedProfile); 
-        console.log("rrr:::",profileData.role)
+
       }
     } catch (error) {
       console.error("Error fetching client:", error);

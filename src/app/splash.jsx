@@ -22,7 +22,7 @@ export default function SplashScreen() {
 
   const bootstrap = async () => {
     const {token} = await getAuth();
-    console.log("rrr:::",token)
+
     if (token) {
       router.replace("/(tabs)/home");
     } else {
