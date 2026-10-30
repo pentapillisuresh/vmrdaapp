@@ -1,14 +1,16 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFonts, Poppins_600SemiBold, Poppins_400Regular, Poppins_500Medium } from "@expo-google-fonts/poppins";
-import { ArrowLeft, Smartphone } from "lucide-react-native";
+import { useFonts, Poppins_600SemiBold, Poppins_400Regular, Poppins_500Medium, Poppins_700Bold } from "@expo-google-fonts/poppins";
+import { ArrowLeft, Phone, Shield, Sparkles } from "lucide-react-native";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTheme } from "../utils/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ApiService from "../components/ApiService";
 import { sendSMS } from "../components/sendSMS";
+
+const { width, height } = Dimensions.get('window');
 
 export default function OTPLoginScreen() {
   const insets = useSafeAreaInsets();
@@ -20,6 +22,7 @@ export default function OTPLoginScreen() {
     Poppins_600SemiBold,
     Poppins_500Medium,
     Poppins_400Regular,
+    Poppins_700Bold,
   });
 
   const handleSendOTP = async () => {
@@ -74,8 +77,8 @@ export default function OTPLoginScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <StatusBar style={theme.statusBarStyle} />
+    <View style={{ flex: 1, backgroundColor: '#F5F7FA' }}>
+      <StatusBar style="dark" />
 
       {/* Header */}
       <View
@@ -83,31 +86,29 @@ export default function OTPLoginScreen() {
           paddingTop: insets.top + 16,
           paddingBottom: 16,
           paddingHorizontal: 20,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.colors.border,
         }}
       >
         <TouchableOpacity
           onPress={() => router.back()}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: theme.colors.surface,
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: '#F0F2F5',
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <ArrowLeft size={20} color={theme.colors.text} strokeWidth={1.5} />
+          <ArrowLeft size={22} color="#1A1A1A" strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: 40,
+          paddingTop: 20,
           paddingBottom: insets.bottom + 40,
-          paddingHorizontal: 20,
+          paddingHorizontal: 24,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -115,28 +116,33 @@ export default function OTPLoginScreen() {
         <View style={{ alignItems: "center", marginBottom: 32 }}>
           <View
             style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: theme.colors.surface,
+              width: 100,
+              height: 100,
+              borderRadius: 50,
+              backgroundColor: theme.colors.primary || '#FF6B35',
               justifyContent: "center",
               alignItems: "center",
-              marginBottom: 20,
+              marginBottom: 16,
+              shadowColor: theme.colors.primary || '#FF6B35',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.2,
+              shadowRadius: 20,
+              elevation: 8,
             }}
           >
-            <Smartphone
-              size={40}
-              color={theme.colors.primary}
-              strokeWidth={1.5}
+            <Phone
+              size={44}
+              color="#FFFFFF"
+              strokeWidth={2}
             />
           </View>
 
           <Text
             style={{
-              fontSize: 24,
-              fontFamily: "Poppins_600SemiBold",
-              color: theme.colors.text,
-              marginBottom: 8,
+              fontSize: 26,
+              fontFamily: "Poppins_700Bold",
+              color: '#1A1A1A',
+              marginBottom: 6,
             }}
           >
             Enter Phone Number
@@ -146,7 +152,7 @@ export default function OTPLoginScreen() {
             style={{
               fontSize: 14,
               fontFamily: "Poppins_400Regular",
-              color: theme.colors.textSecondary,
+              color: '#666666',
               textAlign: "center",
             }}
           >
@@ -155,12 +161,12 @@ export default function OTPLoginScreen() {
         </View>
 
         {/* Phone Input */}
-        <View style={{ marginBottom: 32 }}>
+        <View style={{ marginBottom: 24 }}>
           <Text
             style={{
               fontSize: 14,
               fontFamily: "Poppins_500Medium",
-              color: theme.colors.text,
+              color: '#1A1A1A',
               marginBottom: 8,
             }}
           >
@@ -171,18 +177,23 @@ export default function OTPLoginScreen() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: theme.colors.input,
-              borderRadius: 12,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 50,
               borderWidth: 1,
-              borderColor: theme.colors.border,
-              paddingHorizontal: 16,
+              borderColor: '#E8E8E8',
+              paddingHorizontal: 20,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.04,
+              shadowRadius: 12,
+              elevation: 2,
             }}
           >
             <Text
               style={{
                 fontSize: 16,
-                fontFamily: "Poppins_500Medium",
-                color: theme.colors.text,
+                fontFamily: "Poppins_600SemiBold",
+                color: '#1A1A1A',
                 marginRight: 8,
               }}
             >
@@ -194,11 +205,11 @@ export default function OTPLoginScreen() {
                 flex: 1,
                 fontSize: 16,
                 fontFamily: "Poppins_400Regular",
-                color: theme.colors.text,
-                paddingVertical: 16,
+                color: '#1A1A1A',
+                paddingVertical: 18,
               }}
               placeholder="Enter 10 digit mobile number"
-              placeholderTextColor={theme.colors.placeholder}
+              placeholderTextColor="#999999"
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -212,12 +223,17 @@ export default function OTPLoginScreen() {
           onPress={handleSendOTP}
           disabled={loading}
           style={{
-            backgroundColor: theme.colors.primary,
-            borderRadius: 12,
-            paddingVertical: 16,
+            backgroundColor: theme.colors.primary || '#FF6B35',
+            borderRadius: 50,
+            paddingVertical: 18,
             alignItems: "center",
             marginBottom: 16,
             opacity: loading ? 0.7 : 1,
+            shadowColor: theme.colors.primary || '#FF6B35',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.25,
+            shadowRadius: 12,
+            elevation: 6,
           }}
           activeOpacity={0.8}
         >
@@ -226,6 +242,7 @@ export default function OTPLoginScreen() {
               fontSize: 16,
               fontFamily: "Poppins_600SemiBold",
               color: "#FFFFFF",
+              letterSpacing: 0.5,
             }}
           >
             {loading ? "Sending OTP..." : "Send OTP"}
@@ -237,16 +254,57 @@ export default function OTPLoginScreen() {
           style={{
             fontSize: 12,
             fontFamily: "Poppins_400Regular",
-            color: theme.colors.textSecondary,
+            color: '#888888',
             textAlign: "center",
             lineHeight: 18,
           }}
         >
           By continuing, you agree to our{" "}
-          <Text style={{ color: theme.colors.primary }}>Terms of Service</Text>{" "}
+          <Text style={{ color: theme.colors.primary || '#FF6B35', fontFamily: "Poppins_500Medium" }}>
+            Terms of Service
+          </Text>{" "}
           and{" "}
-          <Text style={{ color: theme.colors.primary }}>Privacy Policy</Text>
+          <Text style={{ color: theme.colors.primary || '#FF6B35', fontFamily: "Poppins_500Medium" }}>
+            Privacy Policy
+          </Text>
         </Text>
+
+        {/* Trust Indicators */}
+        <View
+          style={{
+            marginTop: 30,
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: 24,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Shield size={14} color="#CCCCCC" strokeWidth={2} />
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "Poppins_400Regular",
+                color: '#999999',
+              }}
+            >
+              Secure
+            </Text>
+          </View>
+          <View style={{ width: 1, height: 14, backgroundColor: '#E0E0E0' }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Sparkles size={14} color="#CCCCCC" strokeWidth={2} />
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "Poppins_400Regular",
+                color: '#999999',
+              }}
+            >
+              Premium
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );

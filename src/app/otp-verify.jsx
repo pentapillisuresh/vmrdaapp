@@ -1,14 +1,16 @@
-import { useState, useRef,useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { useState, useRef, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFonts, Poppins_600SemiBold, Poppins_400Regular, Poppins_500Medium } from "@expo-google-fonts/poppins";
-import { ArrowLeft, Shield } from "lucide-react-native";
+import { useFonts, Poppins_600SemiBold, Poppins_400Regular, Poppins_500Medium, Poppins_700Bold } from "@expo-google-fonts/poppins";
+import { ArrowLeft, Sparkles } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTheme } from "../utils/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { saveAuth } from "../utils/auth/auth";
 import ApiService from "../components/ApiService";
+
+const { width, height } = Dimensions.get('window');
 
 export default function OTPVerifyScreen() {
   const insets = useSafeAreaInsets();
@@ -17,6 +19,7 @@ export default function OTPVerifyScreen() {
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
 
   const { phone, otps: otpParam, isNewUser } = useLocalSearchParams();
 
@@ -24,6 +27,7 @@ export default function OTPVerifyScreen() {
     Poppins_600SemiBold,
     Poppins_500Medium,
     Poppins_400Regular,
+    Poppins_700Bold,
   });
 
   /* ---------------- AUTO FILL OTP FROM PATH ---------------- */
@@ -66,13 +70,13 @@ export default function OTPVerifyScreen() {
     try {
       setLoading(true);
 
-      const response = await ApiService.post('/auth/login/phone/verify',{ phone, otp: otpCode });
+      const response = await ApiService.post('/auth/login/phone/verify', { phone, otp: otpCode });
 
       if (!response?.success) {
         Alert.alert("Verification Failed", response?.message || "Invalid OTP");
         return;
-      }else 
-      await saveAuth(response.token, response.user);
+      } else
+        await saveAuth(response.token, response.user);
       router.replace("/(tabs)/home");
     } catch (error) {
       console.error("Verify OTP Error:", error);
@@ -114,8 +118,8 @@ export default function OTPVerifyScreen() {
   if (!loaded) return null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <StatusBar style={theme.statusBarStyle} />
+    <View style={{ flex: 1, backgroundColor: '#F5F7FA' }}>
+      <StatusBar style="dark" />
 
       {/* Header */}
       <View
@@ -123,22 +127,20 @@ export default function OTPVerifyScreen() {
           paddingTop: insets.top + 16,
           paddingBottom: 16,
           paddingHorizontal: 20,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.colors.border,
         }}
       >
         <TouchableOpacity
           onPress={() => router.back()}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: theme.colors.surface,
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: '#F0F2F5',
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <ArrowLeft size={20} color={theme.colors.text} />
+          <ArrowLeft size={22} color="#1A1A1A" strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
 
@@ -146,30 +148,18 @@ export default function OTPVerifyScreen() {
         contentContainerStyle={{
           paddingTop: 40,
           paddingBottom: insets.bottom + 40,
-          paddingHorizontal: 20,
+          paddingHorizontal: 24,
         }}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Icon */}
-        <View style={{ alignItems: "center", marginBottom: 32 }}>
-          <View
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: theme.colors.surface,
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 20,
-            }}
-          >
-            <Shield size={40} color={theme.colors.primary} />
-          </View>
-
+        {/* Title Section */}
+        <View style={{ alignItems: "center", marginBottom: 40 }}>
           <Text
             style={{
-              fontSize: 24,
-              fontFamily: "Poppins_600SemiBold",
-              color: theme.colors.text,
+              fontSize: 28,
+              fontFamily: "Poppins_700Bold",
+              color: '#1A1A1A',
+              marginBottom: 8,
             }}
           >
             Verify OTP
@@ -179,12 +169,15 @@ export default function OTPVerifyScreen() {
             style={{
               fontSize: 14,
               fontFamily: "Poppins_400Regular",
-              color: theme.colors.textSecondary,
+              color: '#666666',
               textAlign: "center",
-              marginTop: 8,
+              marginTop: 4,
             }}
           >
-            Enter the 6-digit code sent to{"\n"}+91 {phone}
+            Enter the 6-digit code sent to{"\n"}
+            <Text style={{ fontFamily: "Poppins_600SemiBold", color: '#1A1A1A' }}>
+              +91 {phone}
+            </Text>
           </Text>
         </View>
 
@@ -194,6 +187,7 @@ export default function OTPVerifyScreen() {
             flexDirection: "row",
             justifyContent: "space-between",
             marginBottom: 32,
+            paddingHorizontal: 4,
           }}
         >
           {otp.map((digit, index) => (
@@ -203,19 +197,30 @@ export default function OTPVerifyScreen() {
               value={digit}
               onChangeText={(v) => handleOtpChange(v, index)}
               onKeyPress={(e) => handleKeyPress(e, index)}
+              onFocus={() => setFocusedIndex(index)}
+              onBlur={() => setFocusedIndex(-1)}
               keyboardType="number-pad"
               maxLength={1}
               style={{
-                width: 50,
-                height: 56,
-                borderRadius: 12,
+                width: 52,
+                height: 60,
+                borderRadius: 16,
                 borderWidth: 2,
-                borderColor: digit ? theme.colors.primary : theme.colors.border,
-                backgroundColor: theme.colors.input,
+                borderColor: digit 
+                  ? theme.colors.primary || '#FF6B35' 
+                  : focusedIndex === index 
+                    ? theme.colors.primary || '#FF6B35'
+                    : '#E8E8E8',
+                backgroundColor: '#FFFFFF',
                 textAlign: "center",
-                fontSize: 20,
+                fontSize: 22,
                 fontFamily: "Poppins_600SemiBold",
-                color: theme.colors.text,
+                color: '#1A1A1A',
+                shadowColor: digit || focusedIndex === index ? theme.colors.primary || '#FF6B35' : '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: digit || focusedIndex === index ? 0.1 : 0.02,
+                shadowRadius: 8,
+                elevation: digit || focusedIndex === index ? 4 : 1,
               }}
             />
           ))}
@@ -223,14 +228,21 @@ export default function OTPVerifyScreen() {
 
         {/* Resend */}
         <View style={{ alignItems: "center", marginBottom: 32 }}>
-          <Text style={{ color: theme.colors.textSecondary }}>
-            Didn’t receive the code?
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: "Poppins_400Regular",
+              color: '#666666',
+            }}
+          >
+            Didn't receive the code?
           </Text>
-          <TouchableOpacity onPress={handleResend}>
+          <TouchableOpacity onPress={handleResend} activeOpacity={0.7}>
             <Text
               style={{
-                color: theme.colors.primary,
+                color: theme.colors.primary || '#FF6B35',
                 fontFamily: "Poppins_600SemiBold",
+                fontSize: 16,
                 marginTop: 6,
               }}
             >
@@ -244,23 +256,65 @@ export default function OTPVerifyScreen() {
           onPress={handleVerify}
           disabled={loading}
           style={{
-            backgroundColor: theme.colors.primary,
-            paddingVertical: 16,
-            borderRadius: 12,
+            backgroundColor: theme.colors.primary || '#FF6B35',
+            paddingVertical: 18,
+            borderRadius: 50,
             alignItems: "center",
             opacity: loading ? 0.7 : 1,
+            shadowColor: theme.colors.primary || '#FF6B35',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.25,
+            shadowRadius: 12,
+            elevation: 6,
           }}
+          activeOpacity={0.8}
         >
           <Text
             style={{
-              color: "#fff",
+              color: "#FFFFFF",
               fontSize: 16,
               fontFamily: "Poppins_600SemiBold",
+              letterSpacing: 0.5,
             }}
           >
             {loading ? "Verifying..." : "Verify & Continue"}
           </Text>
         </TouchableOpacity>
+
+        {/* Trust Indicators */}
+        <View
+          style={{
+            marginTop: 30,
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: 24,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "Poppins_400Regular",
+                color: '#999999',
+              }}
+            >
+              🔒 Secure
+            </Text>
+          </View>
+          <View style={{ width: 1, height: 14, backgroundColor: '#E0E0E0' }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "Poppins_400Regular",
+                color: '#999999',
+              }}
+            >
+              ✦ Premium
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );

@@ -8,7 +8,8 @@ import { router, useLocalSearchParams,useFocusEffect } from "expo-router";
 import { useTheme } from "../utils/theme";
 import ApiService from "../components/ApiService";
 import * as Clipboard from 'expo-clipboard';
-
+import { VideoView, useVideoPlayer } from "expo-video";
+import { Play } from "lucide-react-native";
 const { width } = Dimensions.get("window");
 
 const formatPrice = (price) => {
@@ -27,6 +28,8 @@ export default function PropertyDetailsScreen() {
   const theme = useTheme();
   const { id,properties } = useLocalSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [videoUrls, setVideoUrls] = useState([]);
+const [allMedia, setAllMedia] = useState([]);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [property, setProperty] = useState(properties);
@@ -279,6 +282,28 @@ export default function PropertyDetailsScreen() {
     return [];
   };
 
+  const getVideoUrls = () => {
+  if (!property?.videos) return [];
+
+  try {
+    if (typeof property.videos === "string") {
+      if (property.videos.startsWith("[")) {
+        return JSON.parse(property.videos);
+      }
+
+      return [property.videos];
+    }
+
+    if (Array.isArray(property.videos)) {
+      return property.videos;
+    }
+  } catch (e) {
+    console.log(e);
+  }
+
+  return [];
+};
+
   // Get a safe image URL
   const getSafeImageUrl = (url) => {
     if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
@@ -306,6 +331,68 @@ export default function PropertyDetailsScreen() {
     return val !== null && val !== undefined && val !== "" && val !== 0;
   };
 
+
+    const galleryImages = getGalleryImages();
+  useEffect(() => {
+  const videos = getVideoUrls();
+
+  setVideoUrls(videos);
+
+  setAllMedia([
+    ...videos,
+    ...galleryImages,
+  ]);
+}, [property]);
+
+const isVideo = (index) => {
+  return index < videoUrls.length;
+};
+
+const getMediaUrl = (index) => {
+  return allMedia[index];
+};
+  const profile = property?.profile || {};
+  const address = property?.address || {};
+  const category = property?.category || {};
+  const client = property?.client || {};
+
+
+  const player = useVideoPlayer(
+  isVideo(currentImageIndex)
+    ? getMediaUrl(currentImageIndex)
+    : null,
+  (player) => {
+    player.loop = false;
+    player.play();
+  }
+);
+
+useEffect(() => {
+  if (!isVideo(currentImageIndex)) return;
+
+  const sub = player.addListener("playToEnd", () => {
+    setCurrentImageIndex((prev) =>
+      prev === allMedia.length - 1 ? 0 : prev + 1
+    );
+  });
+
+  return () => sub.remove();
+}, [player, currentImageIndex]);
+
+useEffect(() => {
+  if (allMedia.length <= 1) return;
+
+  if (isVideo(currentImageIndex)) return;
+
+  const timer = setTimeout(() => {
+    setCurrentImageIndex((prev) =>
+      prev === allMedia.length - 1 ? 0 : prev + 1
+    );
+  }, 3000);
+
+  return () => clearTimeout(timer);
+}, [currentImageIndex, allMedia]);
+
   if (!loaded && !fontError) {
     return null;
   }
@@ -328,11 +415,7 @@ export default function PropertyDetailsScreen() {
     );
   }
 
-  const galleryImages = getGalleryImages();
-  const profile = property?.profile || {};
-  const address = property?.address || {};
-  const category = property?.category || {};
-  const client = property?.client || {};
+
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -380,7 +463,7 @@ export default function PropertyDetailsScreen() {
         showsVerticalScrollIndicator={false}
       >
           {/* Image Gallery Section */}
-          {galleryImages.length > 0 && (
+          {allMedia.length > 0 && (
           <View style={{ marginTop: 20, paddingHorizontal: 20 }}>
             <View style={{ 
               backgroundColor: "#FFFFFF", 
@@ -394,14 +477,30 @@ export default function PropertyDetailsScreen() {
             }}>
               {/* Main Image */}
               <View style={{ position: 'relative', height: 200 }}>
-                <Image
-                  source={{ uri: getSafeImageUrl(galleryImages[currentImageIndex]) }}
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="cover"
-                />
+             {isVideo(currentImageIndex) ? (
+  <VideoView
+    player={player}
+    style={{
+      width: "100%",
+      height: "100%",
+    }}
+    nativeControls
+  />
+) : (
+  <Image
+    source={{
+      uri: getSafeImageUrl(getMediaUrl(currentImageIndex)),
+    }}
+    style={{
+      width: "100%",
+      height: "100%",
+    }}
+    resizeMode="cover"
+  />
+)}
                 
                 {/* Navigation Buttons */}
-                {galleryImages.length > 1 && (
+                {allMedia.length > 1 && (
                   <>
                     {currentImageIndex > 0 && (
                       <TouchableOpacity
@@ -423,7 +522,7 @@ export default function PropertyDetailsScreen() {
                       </TouchableOpacity>
                     )}
                     
-                    {currentImageIndex < galleryImages.length - 1 && (
+                    {currentImageIndex < allMedia.length - 1 && (
                       <TouchableOpacity
                         onPress={() => setCurrentImageIndex(prev => prev + 1)}
                         style={{
@@ -446,7 +545,7 @@ export default function PropertyDetailsScreen() {
                 )}
                 
                 {/* Image Indicator Dots */}
-                {galleryImages.length > 1 && (
+                {allMedia.length > 1 && (
                   <View style={{
                     position: 'absolute',
                     bottom: 16,
@@ -456,7 +555,7 @@ export default function PropertyDetailsScreen() {
                     justifyContent: 'center',
                     gap: 8,
                   }}>
-                    {galleryImages.map((_, index) => (
+                    {allMedia.map((_, index) => (
                       <View
                         key={index}
                         style={{
@@ -472,35 +571,51 @@ export default function PropertyDetailsScreen() {
               </View>
 
               {/* Thumbnails */}
-              {galleryImages.length > 1 && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={{ padding: 12 }}
-                >
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {galleryImages.map((image, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        onPress={() => setCurrentImageIndex(index)}
-                        style={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: 8,
-                          overflow: 'hidden',
-                          borderWidth: 2,
-                          borderColor: currentImageIndex === index ? theme.colors.primary : 'transparent',
-                        }}
-                      >
-                        <Image
-                          source={{ uri: getSafeImageUrl(image) }}
-                          style={{ width: '100%', height: '100%' }}
-                          resizeMode="cover"
-                        />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </ScrollView>
+              {allMedia.length > 1 && (
+             <ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  style={{ padding: 12 }}
+>
+  <View style={{ flexDirection: "row", gap: 8 }}>
+    {allMedia.map((item, index) => (
+      <TouchableOpacity
+        key={index}
+        onPress={() => setCurrentImageIndex(index)}
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: 8,
+          overflow: "hidden",
+          borderWidth: 2,
+          borderColor:
+            currentImageIndex === index
+              ? theme.colors.primary
+              : "transparent",
+        }}
+      >
+        {isVideo(index) ? (
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "#000",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Play color="#fff" size={28} />
+          </View>
+        ) : (
+          <Image
+            source={{ uri: getSafeImageUrl(item) }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        )}
+      </TouchableOpacity>
+    ))}
+  </View>
+</ScrollView>
               )}
             </View>
           </View>
