@@ -38,7 +38,7 @@ yarn-error.*
 app-example
 
 .env
-
+.keystore
 .metro-virtual/*
 
 caches/*
